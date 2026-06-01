@@ -1,82 +1,56 @@
 package ch.allianz.jt.entity;
 
-
 import jakarta.persistence.*;
-
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
+@Table(name = "transactions")
 public class Transaction {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    private String type; // BUY / SELL
-
-    private String symbol; // z.B. AAPL
+    private String transactionType; // BUY / SELL / SPLIT / ACQUISITION / MERGER
     private Double quantity;
     private Double price;
-
-    private LocalDateTime timestamp;
+    private String transactionCurrency;
+    private BigDecimal fxRateToPortfolio;
+    private LocalDate transactionDate;
 
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;
 
-    public Long getId() {
-        return id;
-    }
+    @ManyToOne
+    @JoinColumn(name = "security_id")
+    private Security security;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getType() {
-        return type;
-    }
+    public String getTransactionType() { return transactionType; }
+    public void setTransactionType(String transactionType) { this.transactionType = transactionType; }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+    public Double getQuantity() { return quantity; }
+    public void setQuantity(Double quantity) { this.quantity = quantity; }
 
-    public String getSymbol() {
-        return symbol;
-    }
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
 
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
-    }
+    public String getTransactionCurrency() { return transactionCurrency; }
+    public void setTransactionCurrency(String transactionCurrency) { this.transactionCurrency = transactionCurrency; }
 
-    public Double getQuantity() {
-        return quantity;
-    }
+    public BigDecimal getFxRateToPortfolio() { return fxRateToPortfolio; }
+    public void setFxRateToPortfolio(BigDecimal fxRateToPortfolio) { this.fxRateToPortfolio = fxRateToPortfolio; }
 
-    public void setQuantity(Double quantity) {
-        this.quantity = quantity;
-    }
+    public LocalDate getTransactionDate() { return transactionDate; }
+    public void setTransactionDate(LocalDate transactionDate) { this.transactionDate = transactionDate; }
 
-    public Double getPrice() {
-        return price;
-    }
+    public Account getAccount() { return account; }
+    public void setAccount(Account account) { this.account = account; }
 
-    public void setPrice(Double price) {
-        this.price = price;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public Account getAccount() {
-        return account;
-    }
-
-    public void setAccount(Account account) {
-        this.account = account;
-    }
+    public Security getSecurity() { return security; }
+    public void setSecurity(Security security) { this.security = security; }
 }

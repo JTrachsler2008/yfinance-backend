@@ -7,7 +7,6 @@ import ch.allianz.jt.repository.TransactionRepository;
 import ch.allianz.jt.service.TransactionService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -30,14 +29,14 @@ public class TransactionServiceImpl implements TransactionService {
 
         final double total = transaction.getPrice() * transaction.getQuantity();
 
-        if ("BUY".equalsIgnoreCase(transaction.getType())) {
+        if ("BUY".equalsIgnoreCase(transaction.getTransactionType())) {
             account.setCashAmount(account.getCashAmount() - total);
-        } else if ("SELL".equalsIgnoreCase(transaction.getType())) {
+        } else if ("SELL".equalsIgnoreCase(transaction.getTransactionType())) {
             account.setCashAmount(account.getCashAmount() + total);
         }
 
         transaction.setAccount(account);
-        transaction.setTimestamp(LocalDateTime.now());
+        transaction.setTransactionDate(java.time.LocalDate.now());
 
         return transactionRepository.save(transaction);
     }

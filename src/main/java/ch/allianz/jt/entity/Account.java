@@ -1,14 +1,17 @@
 package ch.allianz.jt.entity;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
+@Table(name = "accounts")
 public class Account {
 
     @Id
     @GeneratedValue
     private Long id;
 
+    private String name;
     private String currency;
     private Double cashAmount;
 
@@ -16,35 +19,24 @@ public class Account {
     @JoinColumn(name = "portfolio_id")
     private Portfolio portfolio;
 
-    public Long getId() {
-        return id;
-    }
+    @OneToMany(mappedBy = "account")
+    private List<Transaction> transactions;
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public String getCurrency() {
-        return currency;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
-    public Double getCashAmount() {
-        return cashAmount;
-    }
+    public Double getCashAmount() { return cashAmount; }
+    public void setCashAmount(Double cashAmount) { this.cashAmount = cashAmount; }
 
-    public void setCashAmount(Double cashAmount) {
-        this.cashAmount = cashAmount;
-    }
+    public Portfolio getPortfolio() { return portfolio; }
+    public void setPortfolio(Portfolio portfolio) { this.portfolio = portfolio; }
 
-    public Portfolio getPortfolio() {
-        return portfolio;
-    }
-
-    public void setPortfolio(Portfolio portfolio) {
-        this.portfolio = portfolio;
-    }
+    public List<Transaction> getTransactions() { return transactions; }
+    public void setTransactions(List<Transaction> transactions) { this.transactions = transactions; }
 }
