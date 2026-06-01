@@ -26,4 +26,5 @@ public class TransactionController {
     public List<Transaction> getAll() {
         return transactionService.getAll();
     }
+
 }
