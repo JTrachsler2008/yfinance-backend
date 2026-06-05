@@ -1,3 +1,10 @@
+ch\allianz\jt\controller\EarningsController.class
 ch\allianz\jt\service\impl\SecurityServiceImpl.class
+ch\allianz\jt\controller\InfoController.class
+ch\allianz\jt\service\FxRateService.class
+ch\allianz\jt\service\impl\FxRateServiceImpl.class
 ch\allianz\jt\controller\SecurityController.class
+ch\allianz\jt\controller\SnapshotController.class
+ch\allianz\jt\controller\FxRateController.class
 ch\allianz\jt\service\SecurityService.class
+ch\allianz\jt\controller\NewsController.class

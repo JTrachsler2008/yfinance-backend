@@ -38,9 +38,9 @@ public class InfoResponse {
 
   private @Nullable String description = null;
 
-  private @Nullable Integer marketCap = null;
+  private @Nullable Long marketCap = null;
 
-  private @Nullable Integer sharesOutstanding = null;
+  private @Nullable Long sharesOutstanding = null;
 
   private @Nullable BigDecimal dividendYield = null;
 
@@ -249,7 +249,7 @@ public class InfoResponse {
     this.description = description;
   }
 
-  public InfoResponse marketCap(@Nullable Integer marketCap) {
+  public InfoResponse marketCap(@Nullable Long marketCap) {
     this.marketCap = marketCap;
     return this;
   }
@@ -261,15 +261,15 @@ public class InfoResponse {
   
   @Schema(name = "market_cap", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("market_cap")
-  public @Nullable Integer getMarketCap() {
+  public @Nullable Long getMarketCap() {
     return marketCap;
   }
 
-  public void setMarketCap(@Nullable Integer marketCap) {
+  public void setMarketCap(@Nullable Long marketCap) {
     this.marketCap = marketCap;
   }
 
-  public InfoResponse sharesOutstanding(@Nullable Integer sharesOutstanding) {
+  public InfoResponse sharesOutstanding(@Nullable Long sharesOutstanding) {
     this.sharesOutstanding = sharesOutstanding;
     return this;
   }
@@ -281,11 +281,11 @@ public class InfoResponse {
   
   @Schema(name = "shares_outstanding", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
   @JsonProperty("shares_outstanding")
-  public @Nullable Integer getSharesOutstanding() {
+  public @Nullable Long getSharesOutstanding() {
     return sharesOutstanding;
   }
 
-  public void setSharesOutstanding(@Nullable Integer sharesOutstanding) {
+  public void setSharesOutstanding(@Nullable Long sharesOutstanding) {
     this.sharesOutstanding = sharesOutstanding;
   }
 
