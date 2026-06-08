@@ -2,6 +2,7 @@ package ch.allianz.jt.service.impl;
 
 import ch.allianz.jt.entity.Portfolio;
 import ch.allianz.jt.entity.User;
+import ch.allianz.jt.exception.ResourceNotFoundException;
 import ch.allianz.jt.repository.PortfolioRepository;
 import ch.allianz.jt.repository.UserRepository;
 import ch.allianz.jt.service.PortfolioService;
@@ -25,7 +26,7 @@ public class PortfolioServiceImpl implements PortfolioService {
     public Portfolio createPortfolio(final Long userId, final Portfolio portfolio) {
 
         final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
         portfolio.setUser(user);
         return portfolioRepository.save(portfolio);

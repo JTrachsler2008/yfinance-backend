@@ -26,4 +26,14 @@ public class AccountController {
     public List<Account> getAll() {
         return accountService.getAllAccounts();
     }
+
+    @PostMapping("/{accountId}/deposit")
+    public Account deposit(@PathVariable Long accountId, @RequestParam Double amount) {
+        return accountService.deposit(accountId, amount);
+    }
+
+    @PostMapping("/{accountId}/withdraw")
+    public Account withdraw(@PathVariable Long accountId, @RequestParam Double amount) {
+        return accountService.withdraw(accountId, amount);
+    }
 }

@@ -1,4 +1,5 @@
 ch\allianz\jt\controller\EarningsController.class
+ch\allianz\jt\exception\ResourceNotFoundException.class
 ch\allianz\jt\service\impl\SecurityServiceImpl.class
 ch\allianz\jt\dto\PositionPerformanceDto.class
 ch\allianz\jt\controller\InfoController.class
@@ -8,9 +9,11 @@ ch\allianz\jt\controller\PerformanceController.class
 ch\allianz\jt\service\impl\FxRateServiceImpl.class
 ch\allianz\jt\controller\SecurityController.class
 ch\allianz\jt\controller\SnapshotController.class
+ch\allianz\jt\exception\InsufficientFundsException.class
 ch\allianz\jt\entity\Position.class
 ch\allianz\jt\repository\PositionRepository.class
 ch\allianz\jt\controller\FxRateController.class
+ch\allianz\jt\exception\GlobalExceptionHandler.class
 ch\allianz\jt\service\PerformanceService.class
 ch\allianz\jt\service\impl\PerformanceServiceImpl.class
 ch\allianz\jt\service\SecurityService.class

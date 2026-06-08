@@ -14,6 +14,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\Application.jav
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\Finance.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\FxRateServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\TransactionService.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\exception\InsufficientFundsException.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\PortfolioService.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\EarningsController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\QuoteController.java
@@ -31,6 +32,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\Securit
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\SnapshotController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\SymbolErrorModel.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\PerformanceService.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\exception\GlobalExceptionHandler.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\SnapshotResponse.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\FxRateService.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\NewsRow.java
@@ -55,6 +57,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Security.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\repository\PositionRepository.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\HealthApi.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\exception\ResourceNotFoundException.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Transaction.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\SecurityController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\Storyline.java
