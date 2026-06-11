@@ -1,5 +1,6 @@
 package ch.allianz.jt.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,10 +22,12 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "account_id")
+    @JsonIgnoreProperties({"transactions", "portfolio", "hibernateLazyInitializer"})
     private Account account;
 
     @ManyToOne
     @JoinColumn(name = "security_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer"})
     private Security security;
 
     public Long getId() { return id; }

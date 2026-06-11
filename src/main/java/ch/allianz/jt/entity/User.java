@@ -1,5 +1,6 @@
 package ch.allianz.jt.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,7 @@ public class User {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Portfolio> portfolios;
 
     public Long getId() { return id; }

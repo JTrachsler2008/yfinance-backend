@@ -1,7 +1,7 @@
 package ch.allianz.jt.controller;
 
 import ch.allianz.jt.entity.Position;
-import ch.allianz.jt.repository.PositionRepository;
+import ch.allianz.jt.service.PositionService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,19 +10,24 @@ import java.util.List;
 @RequestMapping("/positions")
 public class PositionController {
 
-    private final PositionRepository positionRepository;
+    private final PositionService positionService;
 
-    public PositionController(final PositionRepository positionRepository) {
-        this.positionRepository = positionRepository;
+    public PositionController(final PositionService positionService) {
+        this.positionService = positionService;
     }
 
     @GetMapping
     public List<Position> getAll() {
-        return positionRepository.findAll();
+        return positionService.getAll();
+    }
+
+    @GetMapping("/account/{accountId}")
+    public List<Position> getByAccount(@PathVariable Long accountId) {
+        return positionService.getByAccountId(accountId);
     }
 
     @PostMapping
     public Position create(@RequestBody Position position) {
-        return positionRepository.save(position);
+        return positionService.create(position);
     }
 }

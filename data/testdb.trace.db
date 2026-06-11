@@ -1,0 +1,8 @@
+2026-06-08 09:09:16 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabelle "USERS" nicht gefunden (diese Datenbank ist leer)
+Table "USERS" not found (this database is empty); SQL statement:
+INSERT INTO users (id, username, email, password, created_at) VALUES (1, 'maxmuster', 'max@test.ch', 'test1234', '2026-01-01 00:00:00') [42104-214]
+2026-06-08 09:28:16 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax Fehler in SQL Befehl "[*]POSITIONS"; erwartet "PREPARE"
+Syntax error in SQL statement "[*]POSITIONS"; expected "PREPARE"; SQL statement:
+POSITIONS [42001-214]

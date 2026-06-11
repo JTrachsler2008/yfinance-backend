@@ -1,12 +1,14 @@
 package ch.allianz.jt.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Table(name = "portfolios")
+@JsonIgnoreProperties({"accounts"})
 public class Portfolio {
 
     @Id
@@ -25,6 +27,7 @@ public class Portfolio {
     private User user;
 
     @OneToMany(mappedBy = "portfolio")
+    @JsonIgnore
     private List<Account> accounts;
 
     public Long getId() { return id; }
@@ -48,6 +51,7 @@ public class Portfolio {
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
+    @JsonIgnore
     public List<Account> getAccounts() { return accounts; }
     public void setAccounts(List<Account> accounts) { this.accounts = accounts; }
 }

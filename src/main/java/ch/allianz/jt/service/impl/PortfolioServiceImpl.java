@@ -9,6 +9,7 @@ import ch.allianz.jt.service.PortfolioService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PortfolioServiceImpl implements PortfolioService {
@@ -35,5 +36,10 @@ public class PortfolioServiceImpl implements PortfolioService {
     @Override
     public List<Portfolio> getAll() {
         return portfolioRepository.findAll();
+    }
+
+    @Override
+    public Optional<Portfolio> getById(final Long id) {
+        return portfolioRepository.findById(id);
     }
 }

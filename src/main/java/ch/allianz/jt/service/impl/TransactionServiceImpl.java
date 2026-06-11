@@ -1,12 +1,16 @@
 package ch.allianz.jt.service.impl;
 
+import ch.allianz.jt.client.YFinanceClient;
 import ch.allianz.jt.entity.Account;
 import ch.allianz.jt.entity.Position;
 import ch.allianz.jt.entity.Transaction;
 import ch.allianz.jt.exception.InsufficientFundsException;
 import ch.allianz.jt.exception.ResourceNotFoundException;
+import ch.allianz.jt.generated.model.QuoteResponse;
 import ch.allianz.jt.repository.AccountRepository;
+import ch.allianz.jt.repository.FxRateRepository;
 import ch.allianz.jt.repository.PositionRepository;
+import ch.allianz.jt.repository.SecurityRepository;
 import ch.allianz.jt.repository.TransactionRepository;
 import ch.allianz.jt.service.TransactionService;
 import org.springframework.stereotype.Service;
@@ -23,27 +27,70 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
+    private final SecurityRepository securityRepository;
+    private final FxRateRepository fxRateRepository;
+    private final YFinanceClient yFinanceClient;
 
     public TransactionServiceImpl(final TransactionRepository transactionRepository,
                                   final AccountRepository accountRepository,
-                                  final PositionRepository positionRepository) {
+                                  final PositionRepository positionRepository,
+                                  final SecurityRepository securityRepository,
+                                  final FxRateRepository fxRateRepository,
+                                  final YFinanceClient yFinanceClient) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.positionRepository = positionRepository;
+        this.securityRepository = securityRepository;
+        this.fxRateRepository = fxRateRepository;
+        this.yFinanceClient = yFinanceClient;
     }
 
     @Override
     public Transaction createTransaction(final Long accountId, final Transaction transaction) {
 
-        final Account account = accountRepository.findById(accountId)
+        final Account account = accountRepository.findByIdWithPortfolio(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountId));
 
         final String type = transaction.getTransactionType().toUpperCase();
+
+        if (transaction.getSecurity() != null && transaction.getSecurity().getId() != null) {
+            transaction.setSecurity(securityRepository.findById(transaction.getSecurity().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Security not found: " + transaction.getSecurity().getId())));
+        }
+
+        if ((transaction.getPrice() == null || transaction.getPrice() == 0)
+                && transaction.getSecurity() != null) {
+            String symbol = transaction.getSecurity().getSymbol();
+            QuoteResponse quote = yFinanceClient.getQuote(symbol);
+            if (quote != null && quote.getCurrentPrice() != null) {
+                transaction.setPrice(quote.getCurrentPrice().doubleValue());
+                transaction.setTransactionCurrency(
+                        transaction.getSecurity().getTradingCurrency() != null
+                        ? transaction.getSecurity().getTradingCurrency()
+                        : account.getCurrency());
+            } else {
+                throw new RuntimeException("Kein Kurs verfügbar für: " + symbol);
+            }
+        }
+
+        if (transaction.getFxRateToPortfolio() == null && transaction.getSecurity() != null) {
+            String tradingCurrency = transaction.getSecurity().getTradingCurrency();
+            String portfolioCurrency = account.getPortfolio().getBaseCurrency();
+            if (tradingCurrency != null && !tradingCurrency.equalsIgnoreCase(portfolioCurrency)) {
+                fxRateRepository
+                    .findTopByBaseCurrencyAndQuoteCurrencyAndRateDateLessThanEqualOrderByRateDateDesc(
+                            tradingCurrency, portfolioCurrency, LocalDate.now())
+                    .ifPresent(fx -> transaction.setFxRateToPortfolio(fx.getRate()));
+            } else {
+                transaction.setFxRateToPortfolio(BigDecimal.ONE);
+            }
+        }
+
         final double total = transaction.getPrice() * transaction.getQuantity();
 
         switch (type) {
             case "BUY":
-                // Cash-Check
                 if (account.getCashAmount() < total) {
                     throw new InsufficientFundsException(
                         "Nicht genug Cash. Verfügbar: " + account.getCashAmount() + ", Benötigt: " + total);
@@ -53,7 +100,6 @@ public class TransactionServiceImpl implements TransactionService {
                 break;
 
             case "SELL":
-                // Prüfen ob genug Stücke vorhanden
                 if (transaction.getSecurity() != null) {
                     Optional<Position> pos = positionRepository
                             .findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId());
@@ -66,18 +112,15 @@ public class TransactionServiceImpl implements TransactionService {
                 break;
 
             case "DIVIDEND":
-                // Dividende erhöht nur Cash, keine Positionsänderung
                 account.setCashAmount(account.getCashAmount() + total);
                 break;
 
             case "SPLIT":
-                // Aktien-Split: Stückzahl anpassen
                 handleSplit(account, transaction);
                 break;
 
             case "ACQUISITION":
             case "MERGER":
-                // Alte Position entfernen, neue Position erstellen
                 handleCorporateAction(account, transaction);
                 break;
 
@@ -92,11 +135,8 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.save(transaction);
     }
 
-    // BUY: Position erstellen oder Durchschnittspreis neu berechnen
     private void updatePosition(final Account account, final Transaction transaction, final boolean isBuy) {
-        if (transaction.getSecurity() == null) {
-            return;
-        }
+        if (transaction.getSecurity() == null) return;
 
         Optional<Position> existing = positionRepository
                 .findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId());
@@ -125,12 +165,8 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    // SPLIT: Stückzahl × Ratio, Einstandspreis ÷ Ratio
-    // price = Split-Ratio (z.B. 2.0 für 2:1 Split)
     private void handleSplit(final Account account, final Transaction transaction) {
-        if (transaction.getSecurity() == null) {
-            return;
-        }
+        if (transaction.getSecurity() == null) return;
         double ratio = transaction.getPrice();
         positionRepository.findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId())
                 .ifPresent(position -> {
@@ -142,21 +178,14 @@ public class TransactionServiceImpl implements TransactionService {
                 });
     }
 
-    // ACQUISITION / MERGER: Alte Security-Position auf neue übertragen
-    // quantity = neue Stückzahl, price = neuer Einstandspreis
     private void handleCorporateAction(final Account account, final Transaction transaction) {
-        if (transaction.getSecurity() == null) {
-            return;
-        }
-        Optional<Position> existing = positionRepository
-                .findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId());
-
-        if (existing.isPresent()) {
-            Position position = existing.get();
-            position.setTotalQuantity(transaction.getQuantity());
-            position.setAveragePurchasePrice(BigDecimal.valueOf(transaction.getPrice()));
-            positionRepository.save(position);
-        }
+        if (transaction.getSecurity() == null) return;
+        positionRepository.findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId())
+                .ifPresent(position -> {
+                    position.setTotalQuantity(transaction.getQuantity());
+                    position.setAveragePurchasePrice(BigDecimal.valueOf(transaction.getPrice()));
+                    positionRepository.save(position);
+                });
     }
 
     @Override

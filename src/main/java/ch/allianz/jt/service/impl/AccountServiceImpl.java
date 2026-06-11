@@ -9,6 +9,7 @@ import ch.allianz.jt.service.AccountService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -36,6 +37,11 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
+    }
+
+    @Override
+    public Optional<Account> getById(final Long id) {
+        return accountRepository.findById(id);
     }
 
     @Override

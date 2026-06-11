@@ -1,5 +1,7 @@
 package ch.allianz.jt.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -17,9 +19,11 @@ public class Account {
 
     @ManyToOne
     @JoinColumn(name = "portfolio_id")
+    @JsonIgnoreProperties({"accounts", "user", "hibernateLazyInitializer"})
     private Portfolio portfolio;
 
     @OneToMany(mappedBy = "account")
+    @JsonIgnore
     private List<Transaction> transactions;
 
     public Long getId() { return id; }

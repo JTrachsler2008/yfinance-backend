@@ -11,6 +11,10 @@ public class PortfolioPerformanceDto {
     private BigDecimal totalMarketValue;
     private BigDecimal totalGainLoss;
     private BigDecimal totalGainLossPercent;
+    /** Time-Weighted Return in % — misst reine Marktrendite, unabhängig von Einzahlungszeitpunkt */
+    private BigDecimal twr;
+    /** Money-Weighted Return in % — interner Zinsfuss, berücksichtigt Einzahlungszeitpunkte */
+    private BigDecimal mwr;
     private List<PositionPerformanceDto> positions;
 
     public Long getPortfolioId() { return portfolioId; }
@@ -30,6 +34,12 @@ public class PortfolioPerformanceDto {
 
     public BigDecimal getTotalGainLossPercent() { return totalGainLossPercent; }
     public void setTotalGainLossPercent(BigDecimal totalGainLossPercent) { this.totalGainLossPercent = totalGainLossPercent; }
+
+    public BigDecimal getTwr() { return twr; }
+    public void setTwr(BigDecimal twr) { this.twr = twr; }
+
+    public BigDecimal getMwr() { return mwr; }
+    public void setMwr(BigDecimal mwr) { this.mwr = mwr; }
 
     public List<PositionPerformanceDto> getPositions() { return positions; }
     public void setPositions(List<PositionPerformanceDto> positions) { this.positions = positions; }

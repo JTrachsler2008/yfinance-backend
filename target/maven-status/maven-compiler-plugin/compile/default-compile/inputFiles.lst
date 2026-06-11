@@ -1,8 +1,10 @@
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\PerformanceController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\UserController.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\dto\SecurityRiskDto.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\ResponseGetquotesbulkValue.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\dto\PositionPerformanceDto.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\SnapshotApi.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\PositionServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\NewsResponse.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\StockSplit.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\ValidationError.java
@@ -30,8 +32,10 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\repository\Acco
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\UserServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\SecurityService.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\SnapshotController.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\RiskController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\SymbolErrorModel.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\PerformanceService.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\RiskService.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\exception\GlobalExceptionHandler.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\SnapshotResponse.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\FxRateService.java
@@ -39,6 +43,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\PortfolioServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\FxRateController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\ReadyApi.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\dto\RiskAnalysisDto.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Position.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\EarningsApi.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\EarningsResponse.java
@@ -56,6 +61,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\Hist
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\CanonicalUrl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Security.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\repository\PositionRepository.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\RiskServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\HealthApi.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\exception\ResourceNotFoundException.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Transaction.java
@@ -66,6 +72,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\UserSer
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\api\InfoApi.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\repository\SecurityRepository.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\Account.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\PositionService.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\HistoricalPrice.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\QuoteResponse.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\entity\User.java
