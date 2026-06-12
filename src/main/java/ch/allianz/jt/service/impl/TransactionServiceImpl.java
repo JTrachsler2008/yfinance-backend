@@ -13,6 +13,8 @@ import ch.allianz.jt.repository.PositionRepository;
 import ch.allianz.jt.repository.SecurityRepository;
 import ch.allianz.jt.repository.TransactionRepository;
 import ch.allianz.jt.service.TransactionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,6 +25,8 @@ import java.util.Optional;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
+
+    private static final Logger log = LoggerFactory.getLogger(TransactionServiceImpl.class);
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
@@ -47,6 +51,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction createTransaction(final Long accountId, final Transaction transaction) {
+        log.info("Neue Transaktion: Typ={}, Account={}", transaction.getTransactionType(), accountId);
 
         final Account account = accountRepository.findByIdWithPortfolio(accountId)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + accountId));
@@ -125,6 +130,7 @@ public class TransactionServiceImpl implements TransactionService {
                 break;
 
             default:
+                log.error("Unbekannter Transaktionstyp: {}", type);
                 throw new RuntimeException("Unbekannter Transaktionstyp: " + type);
         }
 
@@ -132,7 +138,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionDate(LocalDate.now());
         accountRepository.save(account);
 
-        return transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        log.info("Transaktion gespeichert: ID={}, Typ={}, Betrag={}", saved.getId(), type, transaction.getPrice() * transaction.getQuantity());
+        return saved;
     }
 
     private void updatePosition(final Account account, final Transaction transaction, final boolean isBuy) {

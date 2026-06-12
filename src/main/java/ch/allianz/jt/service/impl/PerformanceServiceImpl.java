@@ -16,17 +16,23 @@ import ch.allianz.jt.repository.PortfolioRepository;
 import ch.allianz.jt.repository.PositionRepository;
 import ch.allianz.jt.repository.TransactionRepository;
 import ch.allianz.jt.service.PerformanceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class PerformanceServiceImpl implements PerformanceService {
+
+    private static final Logger log = LoggerFactory.getLogger(PerformanceServiceImpl.class);
 
     private final PortfolioRepository portfolioRepository;
     private final PositionRepository positionRepository;
@@ -34,11 +40,11 @@ public class PerformanceServiceImpl implements PerformanceService {
     private final FxRateRepository fxRateRepository;
     private final YFinanceClient yFinanceClient;
 
-    public PerformanceServiceImpl(final PortfolioRepository portfolioRepository,
-                                   final PositionRepository positionRepository,
-                                   final TransactionRepository transactionRepository,
-                                   final FxRateRepository fxRateRepository,
-                                   final YFinanceClient yFinanceClient) {
+    public PerformanceServiceImpl(PortfolioRepository portfolioRepository,
+                                  PositionRepository positionRepository,
+                                  TransactionRepository transactionRepository,
+                                  FxRateRepository fxRateRepository,
+                                  YFinanceClient yFinanceClient) {
         this.portfolioRepository = portfolioRepository;
         this.positionRepository = positionRepository;
         this.transactionRepository = transactionRepository;
@@ -47,51 +53,56 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public PortfolioPerformanceDto getPortfolioPerformance(final Long portfolioId) {
+    public PortfolioPerformanceDto getPortfolioPerformance(Long portfolioId) {
+        log.info("Performance berechnen für Portfolio {}", portfolioId);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
 
         List<Position> positions = positionRepository.findByAccountPortfolioId(portfolioId);
 
-        BigDecimal totalMarketValue = BigDecimal.ZERO;
-        BigDecimal totalCost = BigDecimal.ZERO;
+        List<PositionPerformanceDto> positionDtos = new ArrayList<>();
 
-        List<PositionPerformanceDto> positionDtos = positions.stream().map(position -> {
-            PositionPerformanceDto dto = new PositionPerformanceDto();
+        for (Position position : positions) {
             String symbol = position.getSecurity().getSymbol();
             String tradingCurrency = position.getSecurity().getTradingCurrency();
             String portfolioCurrency = portfolio.getBaseCurrency();
 
-            dto.setSymbol(symbol);
-            dto.setSecurityName(position.getSecurity().getName());
-            dto.setQuantity(position.getTotalQuantity());
-            dto.setAveragePurchasePrice(position.getAveragePurchasePrice());
-
             QuoteResponse quote = yFinanceClient.getQuote(symbol);
-            BigDecimal currentPrice = quote != null ? quote.getCurrentPrice() : BigDecimal.ZERO;
-            dto.setCurrentPrice(currentPrice);
+            BigDecimal currentPrice = BigDecimal.ZERO;
+            if (quote != null && quote.getCurrentPrice() != null) {
+                currentPrice = quote.getCurrentPrice();
+            }
 
             BigDecimal fxRate = getFxRate(tradingCurrency, portfolioCurrency);
             BigDecimal currentPriceConverted = currentPrice.multiply(fxRate);
             BigDecimal avgPriceConverted = position.getAveragePurchasePrice().multiply(fxRate);
-
             BigDecimal quantity = BigDecimal.valueOf(position.getTotalQuantity());
-            BigDecimal marketValue = currentPriceConverted.multiply(quantity);
-            dto.setMarketValue(marketValue);
 
+            BigDecimal marketValue = currentPriceConverted.multiply(quantity);
             BigDecimal cost = avgPriceConverted.multiply(quantity);
             BigDecimal gainLoss = marketValue.subtract(cost);
-            dto.setGainLoss(gainLoss);
 
+            BigDecimal gainLossPercent = BigDecimal.ZERO;
             if (cost.compareTo(BigDecimal.ZERO) != 0) {
-                dto.setGainLossPercent(gainLoss.divide(cost, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)));
-            } else {
-                dto.setGainLossPercent(BigDecimal.ZERO);
+                gainLossPercent = gainLoss.divide(cost, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
             }
 
-            return dto;
-        }).toList();
+            PositionPerformanceDto dto = new PositionPerformanceDto();
+            dto.setSymbol(symbol);
+            dto.setSecurityName(position.getSecurity().getName());
+            dto.setQuantity(position.getTotalQuantity());
+            dto.setAveragePurchasePrice(position.getAveragePurchasePrice());
+            dto.setCurrentPrice(currentPrice);
+            dto.setMarketValue(marketValue);
+            dto.setGainLoss(gainLoss);
+            dto.setGainLossPercent(gainLossPercent);
+
+            positionDtos.add(dto);
+        }
+
+        BigDecimal totalMarketValue = BigDecimal.ZERO;
+        BigDecimal totalCost = BigDecimal.ZERO;
 
         for (PositionPerformanceDto pos : positionDtos) {
             totalMarketValue = totalMarketValue.add(pos.getMarketValue());
@@ -99,9 +110,10 @@ public class PerformanceServiceImpl implements PerformanceService {
         }
 
         BigDecimal totalGainLoss = totalMarketValue.subtract(totalCost);
-        BigDecimal totalGainLossPercent = totalCost.compareTo(BigDecimal.ZERO) != 0
-                ? totalGainLoss.divide(totalCost, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100))
-                : BigDecimal.ZERO;
+        BigDecimal totalGainLossPercent = BigDecimal.ZERO;
+        if (totalCost.compareTo(BigDecimal.ZERO) != 0) {
+            totalGainLossPercent = totalGainLoss.divide(totalCost, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+        }
 
         PortfolioPerformanceDto result = new PortfolioPerformanceDto();
         result.setPortfolioId(portfolioId);
@@ -114,56 +126,68 @@ public class PerformanceServiceImpl implements PerformanceService {
         result.setMwr(calculateMwr(portfolioId, totalMarketValue));
         result.setPositions(positionDtos);
 
+        log.info("Performance berechnet: MarketValue={}, TWR={}%, MWR={}%",
+                totalMarketValue, result.getTwr(), result.getMwr());
         return result;
     }
 
-    private BigDecimal calculateTwr(final Long portfolioId, final String portfolioCurrency) {
+    private BigDecimal calculateTwr(Long portfolioId, String portfolioCurrency) {
+        log.debug("TWR berechnen für Portfolio {}", portfolioId);
         List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         if (txns.isEmpty()) return BigDecimal.ZERO;
 
-        List<LocalDate> subPeriodDates = txns.stream()
-                .map(Transaction::getTransactionDate)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
+
+        List<LocalDate> subPeriodDates = new ArrayList<>();
+        for (Transaction txn : txns) {
+            if (txn.getTransactionDate() != null && !subPeriodDates.contains(txn.getTransactionDate())) {
+                subPeriodDates.add(txn.getTransactionDate());
+            }
+        }
         subPeriodDates.add(LocalDate.now());
 
-        Set<String> symbols = txns.stream()
-                .filter(t -> t.getSecurity() != null)
-                .map(t -> t.getSecurity().getSymbol())
-                .collect(Collectors.toSet());
 
-        Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
         LocalDate firstDate = subPeriodDates.get(0);
-        for (String symbol : symbols) {
-            historicalPrices.put(symbol, fetchHistoricalPriceMap(symbol, firstDate, LocalDate.now()));
+        Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
+        for (Transaction txn : txns) {
+            if (txn.getSecurity() == null) continue;
+            String symbol = txn.getSecurity().getSymbol();
+            if (!historicalPrices.containsKey(symbol)) {
+                historicalPrices.put(symbol, fetchHistoricalPriceMap(symbol, firstDate, LocalDate.now()));
+            }
+        }
+
+
+        Map<Long, Security> securityMap = new HashMap<>();
+        for (Transaction txn : txns) {
+            if (txn.getSecurity() != null) {
+                securityMap.put(txn.getSecurity().getId(), txn.getSecurity());
+            }
         }
 
         Map<Long, Double> holdings = new HashMap<>();
-        Map<Long, Security> securityMap = txns.stream()
-                .filter(t -> t.getSecurity() != null)
-                .collect(Collectors.toMap(t -> t.getSecurity().getId(), Transaction::getSecurity, (a, b) -> a));
-
         BigDecimal twrProduct = BigDecimal.ONE;
 
         for (int i = 0; i < subPeriodDates.size() - 1; i++) {
             LocalDate periodStart = subPeriodDates.get(i);
             LocalDate periodEnd = subPeriodDates.get(i + 1);
 
-            List<Transaction> txnsOnDate = txns.stream()
-                    .filter(t -> periodStart.equals(t.getTransactionDate()))
-                    .toList();
 
-            for (Transaction txn : txnsOnDate) {
+            for (Transaction txn : txns) {
+                if (!periodStart.equals(txn.getTransactionDate())) continue;
                 if (txn.getSecurity() == null) continue;
+
                 Long secId = txn.getSecurity().getId();
-                double currentQty = holdings.getOrDefault(secId, 0.0);
-                if ("BUY".equalsIgnoreCase(txn.getTransactionType()) || "ACQUISITION".equalsIgnoreCase(txn.getTransactionType())) {
+                double currentQty = 0.0;
+                if (holdings.containsKey(secId)) {
+                    currentQty = holdings.get(secId);
+                }
+
+                String type = txn.getTransactionType().toUpperCase();
+                if (type.equals("BUY") || type.equals("ACQUISITION")) {
                     holdings.put(secId, currentQty + txn.getQuantity());
-                } else if ("SELL".equalsIgnoreCase(txn.getTransactionType())) {
+                } else if (type.equals("SELL")) {
                     holdings.put(secId, Math.max(0, currentQty - txn.getQuantity()));
-                } else if ("SPLIT".equalsIgnoreCase(txn.getTransactionType())) {
+                } else if (type.equals("SPLIT")) {
                     holdings.put(secId, currentQty * txn.getQuantity());
                 }
             }
@@ -171,7 +195,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             BigDecimal vAfter = calculatePortfolioValue(holdings, securityMap, historicalPrices, portfolioCurrency, periodStart);
             BigDecimal vEnd = calculatePortfolioValue(holdings, securityMap, historicalPrices, portfolioCurrency, periodEnd);
 
-            if (vAfter != null && vAfter.compareTo(BigDecimal.ZERO) != 0) {
+            if (vAfter.compareTo(BigDecimal.ZERO) != 0) {
                 twrProduct = twrProduct.multiply(vEnd.divide(vAfter, 6, RoundingMode.HALF_UP));
             }
         }
@@ -179,33 +203,49 @@ public class PerformanceServiceImpl implements PerformanceService {
         return twrProduct.subtract(BigDecimal.ONE).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculatePortfolioValue(final Map<Long, Double> holdings, final Map<Long, Security> securityMap,
-                                               final Map<String, Map<LocalDate, BigDecimal>> historicalPrices,
-                                               final String portfolioCurrency, final LocalDate date) {
+    private BigDecimal calculatePortfolioValue(Map<Long, Double> holdings, Map<Long, Security> securityMap,
+                                               Map<String, Map<LocalDate, BigDecimal>> historicalPrices,
+                                               String portfolioCurrency, LocalDate date) {
         BigDecimal total = BigDecimal.ZERO;
-        for (Map.Entry<Long, Double> entry : holdings.entrySet()) {
-            if (entry.getValue() <= 0) continue;
-            Security sec = securityMap.get(entry.getKey());
+
+        for (Long secId : holdings.keySet()) {
+            double qty = holdings.get(secId);
+            if (qty <= 0) continue;
+
+            Security sec = securityMap.get(secId);
             if (sec == null) continue;
+
             BigDecimal price = findClosestPrice(historicalPrices.get(sec.getSymbol()), date);
             if (price == null) continue;
+
             BigDecimal fxRate = getFxRate(sec.getTradingCurrency(), portfolioCurrency);
-            total = total.add(price.multiply(fxRate).multiply(BigDecimal.valueOf(entry.getValue())));
+            BigDecimal value = price.multiply(fxRate).multiply(BigDecimal.valueOf(qty));
+            total = total.add(value);
         }
+
         return total;
     }
 
-    private BigDecimal findClosestPrice(final Map<LocalDate, BigDecimal> priceMap, final LocalDate date) {
+    private BigDecimal findClosestPrice(Map<LocalDate, BigDecimal> priceMap, LocalDate date) {
         if (priceMap == null || priceMap.isEmpty()) return null;
         if (priceMap.containsKey(date)) return priceMap.get(date);
-        return priceMap.entrySet().stream()
-                .filter(e -> !e.getKey().isAfter(date))
-                .max(Map.Entry.comparingByKey())
-                .map(Map.Entry::getValue)
-                .orElse(null);
+
+        BigDecimal result = null;
+        LocalDate bestDate = null;
+
+        for (LocalDate d : priceMap.keySet()) {
+            if (!d.isAfter(date)) {
+                if (bestDate == null || d.isAfter(bestDate)) {
+                    bestDate = d;
+                    result = priceMap.get(d);
+                }
+            }
+        }
+
+        return result;
     }
 
-    private Map<LocalDate, BigDecimal> fetchHistoricalPriceMap(final String symbol, final LocalDate from, final LocalDate to) {
+    private Map<LocalDate, BigDecimal> fetchHistoricalPriceMap(String symbol, LocalDate from, LocalDate to) {
         Map<LocalDate, BigDecimal> result = new HashMap<>();
         try {
             HistoricalResponse response = yFinanceClient.getHistorical(symbol, from, to, "1d");
@@ -217,40 +257,42 @@ public class PerformanceServiceImpl implements PerformanceService {
                 }
             }
         } catch (Exception e) {
-            // yFinance nicht erreichbar
+            log.warn("Historische Preise konnten nicht geladen werden für {}: {}", symbol, e.getMessage());
         }
         return result;
     }
 
-    private BigDecimal calculateMwr(final Long portfolioId, final BigDecimal terminalMarketValue) {
+    private BigDecimal calculateMwr(Long portfolioId, BigDecimal terminalMarketValue) {
+        log.debug("MWR berechnen für Portfolio {}, Endwert={}", portfolioId, terminalMarketValue);
         List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         if (txns.isEmpty()) return BigDecimal.ZERO;
 
-        LocalDate firstDate = txns.stream()
-                .map(Transaction::getTransactionDate)
-                .filter(Objects::nonNull)
-                .min(Comparator.naturalOrder())
-                .orElse(LocalDate.now());
+
+        LocalDate firstDate = txns.get(0).getTransactionDate();
+        for (Transaction txn : txns) {
+            if (txn.getTransactionDate() != null && txn.getTransactionDate().isBefore(firstDate)) {
+                firstDate = txn.getTransactionDate();
+            }
+        }
+
+
 
         List<double[]> cashFlows = new ArrayList<>();
 
         for (Transaction txn : txns) {
             if (txn.getSecurity() == null || txn.getTransactionDate() == null) continue;
-            long days = ChronoUnit.DAYS.between(firstDate, txn.getTransactionDate());
-            double amount = (txn.getPrice() != null ? txn.getPrice() : 0.0)
-                          * (txn.getQuantity() != null ? txn.getQuantity() : 0.0);
 
-            switch (txn.getTransactionType().toUpperCase()) {
-                case "BUY":
-                case "ACQUISITION":
-                    cashFlows.add(new double[]{days, -amount});
-                    break;
-                case "SELL":
-                case "DIVIDEND":
-                    cashFlows.add(new double[]{days, +amount});
-                    break;
-                default:
-                    break;
+            long days = ChronoUnit.DAYS.between(firstDate, txn.getTransactionDate());
+            double amount = 0.0;
+            if (txn.getPrice() != null && txn.getQuantity() != null) {
+                amount = txn.getPrice() * txn.getQuantity();
+            }
+
+            String type = txn.getTransactionType().toUpperCase();
+            if (type.equals("BUY") || type.equals("ACQUISITION")) {
+                cashFlows.add(new double[]{days, -amount});
+            } else if (type.equals("SELL") || type.equals("DIVIDEND")) {
+                cashFlows.add(new double[]{days, amount});
             }
         }
 
@@ -260,7 +302,7 @@ public class PerformanceServiceImpl implements PerformanceService {
         return BigDecimal.valueOf(solveIrr(cashFlows) * 100).setScale(2, RoundingMode.HALF_UP);
     }
 
-    private double solveIrr(final List<double[]> cashFlows) {
+    private double solveIrr(List<double[]> cashFlows) {
         double low = -0.9999;
         double high = 50.0;
 
@@ -283,7 +325,7 @@ public class PerformanceServiceImpl implements PerformanceService {
         return (low + high) / 2.0;
     }
 
-    private double calculateNpv(final List<double[]> cashFlows, final double rate) {
+    private double calculateNpv(List<double[]> cashFlows, double rate) {
         double npv = 0.0;
         for (double[] cf : cashFlows) {
             npv += cf[1] / Math.pow(1.0 + rate, cf[0] / 365.0);
@@ -291,7 +333,7 @@ public class PerformanceServiceImpl implements PerformanceService {
         return npv;
     }
 
-    private BigDecimal getFxRate(final String fromCurrency, final String toCurrency) {
+    private BigDecimal getFxRate(String fromCurrency, String toCurrency) {
         if (fromCurrency == null || toCurrency == null || fromCurrency.equalsIgnoreCase(toCurrency)) {
             return BigDecimal.ONE;
         }

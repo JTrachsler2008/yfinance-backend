@@ -13,46 +13,59 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplTest {
 
     @Mock
-    private AccountRepository accountRepository;
+    AccountRepository accountRepository;
 
     @Mock
-    private PortfolioRepository portfolioRepository;
+    PortfolioRepository portfolioRepository;
 
     @InjectMocks
-    private AccountServiceImpl accountService;
+    AccountServiceImpl accountService;
 
-    // Test 1: Einzahlung addiert den Betrag korrekt
     @Test
-    void deposit_shouldIncreaseCashAmount() {
+    void deposit_sollCashErhoehen() {
         Account account = new Account();
+        account.setId(1L);
         account.setCashAmount(1000.0);
 
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-        when(accountRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(accountRepository.save(any())).thenReturn(account);
 
         Account result = accountService.deposit(1L, 500.0);
 
-        assertThat(result.getCashAmount()).isEqualTo(1500.0);
+        assertEquals(1500.0, result.getCashAmount());
     }
 
-    // Test 2: Abhebung mit zu wenig Cash wirft InsufficientFundsException
     @Test
-    void withdraw_withInsufficientFunds_shouldThrow() {
+    void withdraw_wennNichtGenugGeld_sollFehlerWerfen() {
         Account account = new Account();
+        account.setId(1L);
         account.setCashAmount(100.0);
 
         when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
 
-        assertThatThrownBy(() -> accountService.withdraw(1L, 500.0))
-                .isInstanceOf(InsufficientFundsException.class);
+        assertThrows(InsufficientFundsException.class, () -> {
+            accountService.withdraw(1L, 500.0);
+        });
+    }
+
+    @Test
+    void withdraw_sollCashReduzieren() {
+        Account account = new Account();
+        account.setId(1L);
+        account.setCashAmount(800.0);
+
+        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+        when(accountRepository.save(any())).thenReturn(account);
+
+        Account result = accountService.withdraw(1L, 300.0);
+
+        assertEquals(500.0, result.getCashAmount());
     }
 }

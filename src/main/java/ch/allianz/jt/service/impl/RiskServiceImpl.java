@@ -12,6 +12,8 @@ import ch.allianz.jt.repository.FxRateRepository;
 import ch.allianz.jt.repository.PortfolioRepository;
 import ch.allianz.jt.repository.PositionRepository;
 import ch.allianz.jt.service.RiskService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class RiskServiceImpl implements RiskService {
+
+    private static final Logger log = LoggerFactory.getLogger(RiskServiceImpl.class);
 
     private static final double RISK_FREE_RATE = 0.04;
     private static final String BENCHMARK_SYMBOL = "SPY";
@@ -45,6 +49,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     public RiskAnalysisDto getRiskAnalysis(final Long portfolioId) {
+        log.info("Risikoanalyse berechnen für Portfolio {}", portfolioId);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
@@ -117,6 +122,8 @@ public class RiskServiceImpl implements RiskService {
         result.setDiversificationBenefit(round((weightedSumVola - portVolatility) * 100));
         result.setSecurities(securityRisks);
 
+        log.info("Risikoanalyse fertig: Volatilität={}%, Sharpe={}, Beta={}",
+                result.getPortfolioVolatility(), result.getPortfolioSharpeRatio(), result.getPortfolioBeta());
         return result;
     }
 
@@ -222,7 +229,7 @@ public class RiskServiceImpl implements RiskService {
                         .forEach(p -> prices.add(p.getClose()));
             }
         } catch (Exception e) {
-            // yFinance nicht erreichbar
+            log.warn("Kurse konnten nicht geladen werden für {}: {}", symbol, e.getMessage());
         }
         return prices;
     }

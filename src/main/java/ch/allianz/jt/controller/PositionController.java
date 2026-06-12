@@ -26,8 +26,5 @@ public class PositionController {
         return positionService.getByAccountId(accountId);
     }
 
-    @PostMapping
-    public Position create(@RequestBody Position position) {
-        return positionService.create(position);
-    }
+
 }
