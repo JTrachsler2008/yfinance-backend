@@ -18,6 +18,7 @@ public class Security {
     private String exchangeCode;
     private String tradingCurrency;
     private String countryCode;
+    private String sector;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -44,6 +45,9 @@ public class Security {
 
     public String getCountryCode() { return countryCode; }
     public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+
+    public String getSector() { return sector; }
+    public void setSector(String sector) { this.sector = sector; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/securities")
@@ -39,5 +40,20 @@ public class SecurityController {
         return securityService.getBySymbol(symbol)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/lookup")
+    public Security lookup(@RequestParam String symbol) {
+        return securityService.lookupOrCreate(symbol);
+    }
+
+    @PostMapping("/refresh")
+    public List<Security> refreshAll() {
+        return securityService.refreshAll();
+    }
+
+    @GetMapping("/search")
+    public List<Map<String, String>> search(@RequestParam String query) {
+        return securityService.search(query);
     }
 }

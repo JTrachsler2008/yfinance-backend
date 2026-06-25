@@ -97,6 +97,9 @@ public class PerformanceServiceImpl implements PerformanceService {
             dto.setMarketValue(marketValue);
             dto.setGainLoss(gainLoss);
             dto.setGainLossPercent(gainLossPercent);
+            dto.setSector(position.getSecurity().getSector());
+            dto.setCountryCode(position.getSecurity().getCountryCode());
+            dto.setTradingCurrency(tradingCurrency);
 
             positionDtos.add(dto);
         }
@@ -143,7 +146,7 @@ public class PerformanceServiceImpl implements PerformanceService {
                 subPeriodDates.add(txn.getTransactionDate());
             }
         }
-        subPeriodDates.add(LocalDate.now());
+        subPeriodDates.add(LocalDate.now().minusDays(1));
 
 
         LocalDate firstDate = subPeriodDates.get(0);
@@ -152,7 +155,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             if (txn.getSecurity() == null) continue;
             String symbol = txn.getSecurity().getSymbol();
             if (!historicalPrices.containsKey(symbol)) {
-                historicalPrices.put(symbol, fetchHistoricalPriceMap(symbol, firstDate, LocalDate.now()));
+                historicalPrices.put(symbol, fetchHistoricalPriceMap(symbol, firstDate, LocalDate.now().minusDays(1)));
             }
         }
 

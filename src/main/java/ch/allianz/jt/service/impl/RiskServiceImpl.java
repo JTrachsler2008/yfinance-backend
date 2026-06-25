@@ -56,7 +56,7 @@ public class RiskServiceImpl implements RiskService {
 
         List<Position> positions = positionRepository.findByAccountPortfolioId(portfolioId);
 
-        LocalDate endDate = LocalDate.now();
+        LocalDate endDate = LocalDate.now().minusDays(1);
         LocalDate startDate = endDate.minusDays(LOOKBACK_DAYS);
 
         List<Double> benchmarkReturns = getDailyReturns(BENCHMARK_SYMBOL, startDate, endDate);

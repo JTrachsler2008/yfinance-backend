@@ -13,4 +13,10 @@ public interface SecurityService {
     Optional<Security> getById(Long id);
 
     Optional<Security> getBySymbol(String symbol);
+
+    Security lookupOrCreate(String symbol);
+
+    List<Security> refreshAll();
+
+    List<java.util.Map<String, String>> search(String query);
 }

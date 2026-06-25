@@ -1,3 +1,4 @@
+ch\allianz\jt\controller\CompareController.class
 ch\allianz\jt\controller\EarningsController.class
 ch\allianz\jt\service\impl\RiskServiceImpl.class
 ch\allianz\jt\dto\PositionPerformanceDto.class

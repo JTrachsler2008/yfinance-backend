@@ -12,6 +12,9 @@ public class PositionPerformanceDto {
     private BigDecimal marketValue;
     private BigDecimal gainLoss;
     private BigDecimal gainLossPercent;
+    private String sector;
+    private String countryCode;
+    private String tradingCurrency;
 
     public String getSymbol() { return symbol; }
     public void setSymbol(String symbol) { this.symbol = symbol; }
@@ -36,4 +39,13 @@ public class PositionPerformanceDto {
 
     public BigDecimal getGainLossPercent() { return gainLossPercent; }
     public void setGainLossPercent(BigDecimal gainLossPercent) { this.gainLossPercent = gainLossPercent; }
+
+    public String getSector() { return sector; }
+    public void setSector(String sector) { this.sector = sector; }
+
+    public String getCountryCode() { return countryCode; }
+    public void setCountryCode(String countryCode) { this.countryCode = countryCode; }
+
+    public String getTradingCurrency() { return tradingCurrency; }
+    public void setTradingCurrency(String tradingCurrency) { this.tradingCurrency = tradingCurrency; }
 }
