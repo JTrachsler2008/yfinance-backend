@@ -29,7 +29,8 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<Account> getAll() {
+    public List<Account> getAll(@RequestParam(required = false) Long portfolioId) {
+        if (portfolioId != null) return accountService.getByPortfolio(portfolioId);
         return accountService.getAllAccounts();
     }
 

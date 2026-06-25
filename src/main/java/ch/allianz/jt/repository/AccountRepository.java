@@ -9,5 +9,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Query("SELECT a FROM Account a JOIN FETCH a.portfolio WHERE a.id = :id")
     java.util.Optional<Account> findByIdWithPortfolio(Long id);
+
+    java.util.List<Account> findByPortfolioId(Long portfolioId);
 }
 

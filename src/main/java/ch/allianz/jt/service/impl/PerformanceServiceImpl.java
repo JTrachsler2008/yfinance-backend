@@ -23,9 +23,11 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -334,6 +336,68 @@ public class PerformanceServiceImpl implements PerformanceService {
             npv += cf[1] / Math.pow(1.0 + rate, cf[0] / 365.0);
         }
         return npv;
+    }
+
+    @Override
+    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
+        String currency = portfolio.getBaseCurrency();
+
+        List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
+        if (txns.isEmpty()) return List.of();
+
+        LocalDate from = LocalDate.now().minusMonths(months);
+        LocalDate to = LocalDate.now().minusDays(1);
+
+        // Fetch historical prices for all securities in range
+        Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
+        Map<Long, Security> securityMap = new HashMap<>();
+        for (Transaction t : txns) {
+            if (t.getSecurity() == null) continue;
+            securityMap.put(t.getSecurity().getId(), t.getSecurity());
+            String sym = t.getSecurity().getSymbol();
+            if (!historicalPrices.containsKey(sym)) {
+                historicalPrices.put(sym, fetchHistoricalPriceMap(sym, from, to));
+            }
+        }
+
+        // Build month-end dates
+        List<LocalDate> monthEnds = new ArrayList<>();
+        LocalDate cursor = from.withDayOfMonth(from.lengthOfMonth());
+        while (!cursor.isAfter(to)) {
+            monthEnds.add(cursor);
+            cursor = cursor.plusMonths(1).withDayOfMonth(cursor.plusMonths(1).lengthOfMonth());
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        Map<Long, Double> holdings = new HashMap<>();
+
+        int txIdx = 0;
+        for (LocalDate monthEnd : monthEnds) {
+            // Apply all transactions up to this month end
+            while (txIdx < txns.size() && !txns.get(txIdx).getTransactionDate().isAfter(monthEnd)) {
+                Transaction t = txns.get(txIdx);
+                if (t.getSecurity() != null) {
+                    Long sid = t.getSecurity().getId();
+                    String type = t.getTransactionType().toUpperCase();
+                    double qty = holdings.getOrDefault(sid, 0.0);
+                    if (type.equals("BUY") || type.equals("ACQUISITION")) holdings.put(sid, qty + t.getQuantity());
+                    else if (type.equals("SELL")) holdings.put(sid, Math.max(0, qty - t.getQuantity()));
+                    else if (type.equals("SPLIT") && t.getQuantity() != null) holdings.put(sid, qty * t.getQuantity());
+                }
+                txIdx++;
+            }
+
+            BigDecimal value = calculatePortfolioValue(holdings, securityMap, historicalPrices, currency, monthEnd);
+            if (value.compareTo(BigDecimal.ZERO) > 0) {
+                Map<String, Object> point = new LinkedHashMap<>();
+                point.put("date", monthEnd.format(DateTimeFormatter.ofPattern("yyyy-MM")));
+                point.put("value", value.setScale(2, RoundingMode.HALF_UP));
+                result.add(point);
+            }
+        }
+        return result;
     }
 
     private BigDecimal getFxRate(String fromCurrency, String toCurrency) {

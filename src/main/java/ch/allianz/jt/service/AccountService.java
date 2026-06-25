@@ -10,6 +10,8 @@ public interface AccountService {
 
     List<Account> getAllAccounts();
 
+    List<Account> getByPortfolio(Long portfolioId);
+
     Optional<Account> getById(Long id);
 
     Account deposit(Long accountId, Double amount);

@@ -45,6 +45,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public List<Account> getByPortfolio(Long portfolioId) {
+        return accountRepository.findByPortfolioId(portfolioId);
+    }
+
+    @Override
     public Optional<Account> getById(final Long id) {
         return accountRepository.findById(id);
     }
