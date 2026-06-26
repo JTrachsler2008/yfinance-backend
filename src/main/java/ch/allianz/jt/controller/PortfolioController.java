@@ -34,4 +34,9 @@ public class PortfolioController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PatchMapping("/{id}/currency")
+    public Portfolio updateCurrency(@PathVariable Long id, @RequestParam String currency) {
+        return portfolioService.updateCurrency(id, currency);
+    }
 }

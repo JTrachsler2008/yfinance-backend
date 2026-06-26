@@ -28,14 +28,16 @@ public class PerformanceController {
     }
 
     @GetMapping("/{id}/performance")
-    public PortfolioPerformanceDto getPerformance(@PathVariable Long id) {
-        return performanceService.getPortfolioPerformance(id);
+    public PortfolioPerformanceDto getPerformance(@PathVariable Long id,
+                                                  @RequestParam(required = false) String currency) {
+        return performanceService.getPortfolioPerformance(id, currency);
     }
 
     @GetMapping("/{id}/history")
     public List<Map<String, Object>> history(@PathVariable Long id,
-                                             @RequestParam(defaultValue = "36") int months) {
-        return performanceService.getPortfolioHistory(id, months);
+                                             @RequestParam(defaultValue = "36") int months,
+                                             @RequestParam(required = false) String currency) {
+        return performanceService.getPortfolioHistory(id, months, currency);
     }
 
     @GetMapping("/{id}/realized-gains")

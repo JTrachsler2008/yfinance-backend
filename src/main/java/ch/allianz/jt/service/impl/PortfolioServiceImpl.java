@@ -42,4 +42,12 @@ public class PortfolioServiceImpl implements PortfolioService {
     public Optional<Portfolio> getById(final Long id) {
         return portfolioRepository.findById(id);
     }
+
+    @Override
+    public Portfolio updateCurrency(final Long id, final String currency) {
+        Portfolio portfolio = portfolioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + id));
+        portfolio.setBaseCurrency(currency);
+        return portfolioRepository.save(portfolio);
+    }
 }

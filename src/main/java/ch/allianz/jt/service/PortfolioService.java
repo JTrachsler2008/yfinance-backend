@@ -11,4 +11,6 @@ public interface PortfolioService {
     List<Portfolio> getAll();
 
     Optional<Portfolio> getById(Long id);
+
+    Portfolio updateCurrency(Long id, String currency);
 }

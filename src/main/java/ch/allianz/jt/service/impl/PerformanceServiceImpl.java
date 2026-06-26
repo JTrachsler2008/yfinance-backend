@@ -55,7 +55,7 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public PortfolioPerformanceDto getPortfolioPerformance(Long portfolioId) {
+    public PortfolioPerformanceDto getPortfolioPerformance(Long portfolioId, String currency) {
         log.info("Performance berechnen für Portfolio {}", portfolioId);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
@@ -65,10 +65,12 @@ public class PerformanceServiceImpl implements PerformanceService {
 
         List<PositionPerformanceDto> positionDtos = new ArrayList<>();
 
+        final String effectiveCurrency = (currency != null && !currency.isBlank()) ? currency : portfolio.getBaseCurrency();
+
         for (Position position : positions) {
             String symbol = position.getSecurity().getSymbol();
             String tradingCurrency = position.getSecurity().getTradingCurrency();
-            String portfolioCurrency = portfolio.getBaseCurrency();
+            String portfolioCurrency = effectiveCurrency;
 
             QuoteResponse quote = yFinanceClient.getQuote(symbol);
             BigDecimal currentPrice = BigDecimal.ZERO;
@@ -123,11 +125,11 @@ public class PerformanceServiceImpl implements PerformanceService {
         PortfolioPerformanceDto result = new PortfolioPerformanceDto();
         result.setPortfolioId(portfolioId);
         result.setPortfolioName(portfolio.getName());
-        result.setCurrency(portfolio.getBaseCurrency());
+        result.setCurrency(effectiveCurrency);
         result.setTotalMarketValue(totalMarketValue);
         result.setTotalGainLoss(totalGainLoss);
         result.setTotalGainLossPercent(totalGainLossPercent);
-        result.setTwr(calculateTwr(portfolioId, portfolio.getBaseCurrency()));
+        result.setTwr(calculateTwr(portfolioId, effectiveCurrency));
         result.setMwr(calculateMwr(portfolioId, totalMarketValue));
         result.setPositions(positionDtos);
 
@@ -339,10 +341,10 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months) {
+    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months, String currency) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
-        String currency = portfolio.getBaseCurrency();
+        if (currency == null || currency.isBlank()) currency = portfolio.getBaseCurrency();
 
         List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         if (txns.isEmpty()) return List.of();
