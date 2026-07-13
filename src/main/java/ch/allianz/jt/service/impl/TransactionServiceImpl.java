@@ -149,13 +149,18 @@ public class TransactionServiceImpl implements TransactionService {
         Optional<Position> existing = positionRepository
                 .findByAccountIdAndSecurityId(account.getId(), transaction.getSecurity().getId());
 
+        BigDecimal fees = BigDecimal.valueOf((transaction.getFee() != null ? transaction.getFee() : 0.0)
+                + (transaction.getTax() != null ? transaction.getTax() : 0.0));
+
         if (existing.isPresent()) {
             Position position = existing.get();
             if (isBuy) {
                 double oldQty = position.getTotalQuantity();
                 double newQty = oldQty + transaction.getQuantity();
                 BigDecimal oldCost = position.getAveragePurchasePrice().multiply(BigDecimal.valueOf(oldQty));
-                BigDecimal newCost = BigDecimal.valueOf(transaction.getPrice()).multiply(BigDecimal.valueOf(transaction.getQuantity()));
+                BigDecimal newCost = BigDecimal.valueOf(transaction.getPrice())
+                        .multiply(BigDecimal.valueOf(transaction.getQuantity()))
+                        .add(fees);
                 BigDecimal avgPrice = oldCost.add(newCost).divide(BigDecimal.valueOf(newQty), 4, RoundingMode.HALF_UP);
                 position.setTotalQuantity(newQty);
                 position.setAveragePurchasePrice(avgPrice);
@@ -164,11 +169,16 @@ public class TransactionServiceImpl implements TransactionService {
             }
             positionRepository.save(position);
         } else if (isBuy) {
+            double qty = transaction.getQuantity();
+            BigDecimal totalCost = BigDecimal.valueOf(transaction.getPrice())
+                    .multiply(BigDecimal.valueOf(qty))
+                    .add(fees);
+            BigDecimal avgPrice = totalCost.divide(BigDecimal.valueOf(qty), 4, RoundingMode.HALF_UP);
             Position position = new Position();
             position.setAccount(account);
             position.setSecurity(transaction.getSecurity());
-            position.setTotalQuantity(transaction.getQuantity());
-            position.setAveragePurchasePrice(BigDecimal.valueOf(transaction.getPrice()));
+            position.setTotalQuantity(qty);
+            position.setAveragePurchasePrice(avgPrice);
             positionRepository.save(position);
         }
     }

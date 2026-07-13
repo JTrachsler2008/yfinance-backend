@@ -231,6 +231,92 @@ public class CompareController {
         return hasAny ? total : null;
     }
 
+    @GetMapping("/risk-benchmarks")
+    public List<Map<String, Object>> riskBenchmarks() {
+        LocalDate from = LocalDate.now().minusYears(3).withDayOfMonth(1);
+        LocalDate to = LocalDate.now().minusDays(1);
+
+        Map<String, String> benchmarks = new LinkedHashMap<>();
+        benchmarks.put("SPY", "S&P 500");
+        benchmarks.put("QQQ", "Nasdaq 100");
+        benchmarks.put("AGG", "Anleihen");
+        benchmarks.put("GLD", "Gold");
+        benchmarks.put("VNQ", "REITs");
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Map.Entry<String, String> entry : benchmarks.entrySet()) {
+            String symbol = entry.getKey();
+            try {
+                HistoricalResponse resp = yFinanceClient.getHistorical(symbol, from, to, "1mo");
+                if (resp == null || resp.getPrices() == null) continue;
+
+                List<BigDecimal> closes = resp.getPrices().stream()
+                        .filter(p -> p.getClose() != null)
+                        .sorted(Comparator.comparing(HistoricalPrice::getDate))
+                        .map(HistoricalPrice::getClose)
+                        .toList();
+
+                if (closes.size() < 6) continue;
+
+                // Monthly returns
+                List<Double> returns = new ArrayList<>();
+                for (int i = 1; i < closes.size(); i++) {
+                    double r = closes.get(i).subtract(closes.get(i - 1))
+                            .divide(closes.get(i - 1), 6, RoundingMode.HALF_UP).doubleValue();
+                    returns.add(r);
+                }
+
+                double mean = returns.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+                double variance = returns.stream().mapToDouble(r -> Math.pow(r - mean, 2)).average().orElse(0);
+                double monthlyVol = Math.sqrt(variance);
+                double annualVol = monthlyVol * Math.sqrt(12) * 100;
+
+                BigDecimal first = closes.get(0);
+                BigDecimal last = closes.get(closes.size() - 1);
+                double years = closes.size() / 12.0;
+                double annualReturn = (Math.pow(last.doubleValue() / first.doubleValue(), 1.0 / years) - 1) * 100;
+
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("symbol", symbol);
+                row.put("name", entry.getValue());
+                row.put("volatility", BigDecimal.valueOf(annualVol).setScale(2, RoundingMode.HALF_UP));
+                row.put("annualizedReturn", BigDecimal.valueOf(annualReturn).setScale(2, RoundingMode.HALF_UP));
+                result.add(row);
+            } catch (Exception ignored) {}
+        }
+        return result;
+    }
+
+    @GetMapping("/benchmark")
+    public List<Map<String, Object>> benchmark(@RequestParam String symbol,
+                                               @RequestParam(defaultValue = "36") int months) {
+        LocalDate from = LocalDate.now().minusMonths(months).withDayOfMonth(1);
+        LocalDate to = LocalDate.now().minusDays(1);
+
+        HistoricalResponse resp = yFinanceClient.getHistorical(symbol, from, to, "1mo");
+        if (resp == null || resp.getPrices() == null) return List.of();
+
+        List<HistoricalPrice> prices = resp.getPrices().stream()
+                .filter(p -> p.getClose() != null && p.getDate() != null)
+                .sorted(Comparator.comparing(HistoricalPrice::getDate))
+                .toList();
+
+        if (prices.isEmpty()) return List.of();
+
+        BigDecimal base = prices.get(0).getClose();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (HistoricalPrice p : prices) {
+            BigDecimal normalized = p.getClose().divide(base, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("date", p.getDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")));
+            row.put("normalizedValue", normalized);
+            result.add(row);
+        }
+        return result;
+    }
+
     private BigDecimal findClosest(Map<LocalDate, BigDecimal> prices, LocalDate date) {
         if (prices.containsKey(date)) return prices.get(date);
         BigDecimal result = null;

@@ -37,7 +37,7 @@ public class HistoricalPrice {
 
   private BigDecimal close;
 
-  private Integer volume = null;
+  private Long volume = null;
 
   public HistoricalPrice() {
     super();
@@ -46,7 +46,7 @@ public class HistoricalPrice {
   /**
    * Constructor with only required parameters
    */
-  public HistoricalPrice(LocalDate date, OffsetDateTime timestamp, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, Integer volume) {
+  public HistoricalPrice(LocalDate date, OffsetDateTime timestamp, BigDecimal open, BigDecimal high, BigDecimal low, BigDecimal close, Long volume) {
     this.date = date;
     this.timestamp = timestamp;
     this.open = open;
@@ -176,7 +176,7 @@ public class HistoricalPrice {
     this.close = close;
   }
 
-  public HistoricalPrice volume(Integer volume) {
+  public HistoricalPrice volume(Long volume) {
     this.volume = volume;
     return this;
   }
@@ -188,11 +188,11 @@ public class HistoricalPrice {
   @NotNull 
   @Schema(name = "volume", requiredMode = Schema.RequiredMode.REQUIRED)
   @JsonProperty("volume")
-  public Integer getVolume() {
+  public Long getVolume() {
     return volume;
   }
 
-  public void setVolume(Integer volume) {
+  public void setVolume(Long volume) {
     this.volume = volume;
   }
 

@@ -116,11 +116,27 @@ public class PerformanceServiceImpl implements PerformanceService {
             totalCost = totalCost.add(pos.getMarketValue().subtract(pos.getGainLoss()));
         }
 
+        // Dividendenerträge summieren (konvertiert in Portfolio-Währung)
+        List<Transaction> allTxns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
+        BigDecimal totalDividends = BigDecimal.ZERO;
+        for (Transaction t : allTxns) {
+            if (!"DIVIDEND".equalsIgnoreCase(t.getTransactionType())) continue;
+            if (t.getPrice() == null || t.getQuantity() == null) continue;
+            BigDecimal divAmount = BigDecimal.valueOf(t.getPrice() * t.getQuantity());
+            String divCurrency = t.getTransactionCurrency() != null ? t.getTransactionCurrency()
+                    : (t.getSecurity() != null ? t.getSecurity().getTradingCurrency() : effectiveCurrency);
+            BigDecimal fxRate = getFxRate(divCurrency, effectiveCurrency);
+            totalDividends = totalDividends.add(divAmount.multiply(fxRate));
+        }
+        totalDividends = totalDividends.setScale(2, RoundingMode.HALF_UP);
+
         BigDecimal totalGainLoss = totalMarketValue.subtract(totalCost);
         BigDecimal totalGainLossPercent = BigDecimal.ZERO;
         if (totalCost.compareTo(BigDecimal.ZERO) != 0) {
             totalGainLossPercent = totalGainLoss.divide(totalCost, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
         }
+
+        BigDecimal totalReturnInclDividends = totalGainLoss.add(totalDividends);
 
         PortfolioPerformanceDto result = new PortfolioPerformanceDto();
         result.setPortfolioId(portfolioId);
@@ -129,6 +145,8 @@ public class PerformanceServiceImpl implements PerformanceService {
         result.setTotalMarketValue(totalMarketValue);
         result.setTotalGainLoss(totalGainLoss);
         result.setTotalGainLossPercent(totalGainLossPercent);
+        result.setTotalDividends(totalDividends);
+        result.setTotalReturnInclDividends(totalReturnInclDividends);
         result.setTwr(calculateTwr(portfolioId, effectiveCurrency));
         result.setMwr(calculateMwr(portfolioId, totalMarketValue));
         result.setPositions(positionDtos);
@@ -341,7 +359,7 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months, String currency) {
+    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months, String currency, String from, String to) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
         if (currency == null || currency.isBlank()) currency = portfolio.getBaseCurrency();
@@ -349,8 +367,8 @@ public class PerformanceServiceImpl implements PerformanceService {
         List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         if (txns.isEmpty()) return List.of();
 
-        LocalDate from = LocalDate.now().minusMonths(months);
-        LocalDate to = LocalDate.now().minusDays(1);
+        LocalDate fromDate = (from != null && !from.isBlank()) ? LocalDate.parse(from) : LocalDate.now().minusMonths(months);
+        LocalDate toDate = (to != null && !to.isBlank()) ? LocalDate.parse(to) : LocalDate.now().minusDays(1);
 
         // Fetch historical prices for all securities in range
         Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
@@ -360,14 +378,14 @@ public class PerformanceServiceImpl implements PerformanceService {
             securityMap.put(t.getSecurity().getId(), t.getSecurity());
             String sym = t.getSecurity().getSymbol();
             if (!historicalPrices.containsKey(sym)) {
-                historicalPrices.put(sym, fetchHistoricalPriceMap(sym, from, to));
+                historicalPrices.put(sym, fetchHistoricalPriceMap(sym, fromDate, toDate));
             }
         }
 
         // Build month-end dates
         List<LocalDate> monthEnds = new ArrayList<>();
-        LocalDate cursor = from.withDayOfMonth(from.lengthOfMonth());
-        while (!cursor.isAfter(to)) {
+        LocalDate cursor = fromDate.withDayOfMonth(fromDate.lengthOfMonth());
+        while (!cursor.isAfter(toDate)) {
             monthEnds.add(cursor);
             cursor = cursor.plusMonths(1).withDayOfMonth(cursor.plusMonths(1).lengthOfMonth());
         }

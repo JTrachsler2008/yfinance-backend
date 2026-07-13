@@ -88,7 +88,7 @@ public class AlphaVantageClient {
                 price.setHigh(new BigDecimal(day.path("2. high").asText()));
                 price.setLow(new BigDecimal(day.path("3. low").asText()));
                 price.setClose(new BigDecimal(day.path("4. close").asText()));
-                price.setVolume(day.path("5. volume").asInt());
+                price.setVolume(day.path("5. volume").asLong());
                 prices.add(price);
             }
 

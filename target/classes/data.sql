@@ -33,23 +33,23 @@ INSERT INTO securities (id, symbol, isin, name, asset_type, exchange_code, tradi
 -- V:    Kauf Sep 2020 @ 207 → heute ~370 (+79%)
 -- JPM:  Kauf Okt 2020 @ 104 → heute ~270 (+160%)
 -- NESN: Kauf Jan 2020 @ 98 CHF → heute ~94 CHF (-4%)
-INSERT INTO transactions (id, account_id, security_id, transaction_type, quantity, price, transaction_currency, fx_rate_to_portfolio, transaction_date) VALUES
-(1,  1, 1,  'BUY',      25,  132.00, 'USD', 0.90, '2021-01-15'),
-(2,  1, 2,  'BUY',      10,  232.00, 'USD', 0.90, '2021-02-10'),
-(3,  1, 3,  'BUY',      20,  145.00, 'USD', 0.90, '2021-04-05'),
-(4,  1, 4,  'BUY',      15,  126.00, 'USD', 0.90, '2021-06-01'),
-(5,  1, 5,  'BUY',      12,  168.00, 'USD', 0.90, '2021-08-20'),
-(6,  1, 6,  'BUY',       8,  285.00, 'USD', 0.90, '2021-03-15'),
-(7,  1, 7,  'BUY',      15,  230.00, 'USD', 0.90, '2021-01-28'),
-(8,  1, 8,  'BUY',      10,  207.00, 'USD', 0.91, '2020-09-10'),
-(9,  1, 9,  'BUY',      20,  104.00, 'USD', 0.91, '2020-10-05'),
-(10, 2, 10, 'BUY',      25,   98.00, 'CHF', 1.00, '2020-01-20'),
--- Dividenden
-(11, 1, 1,  'DIVIDEND',  25,   0.96, 'USD', 0.89, '2024-02-15'),
-(12, 1, 2,  'DIVIDEND',  10,   2.94, 'USD', 0.89, '2024-03-14'),
-(13, 1, 8,  'DIVIDEND',  10,   2.08, 'USD', 0.89, '2024-09-02'),
-(14, 1, 9,  'DIVIDEND',  20,   1.25, 'USD', 0.89, '2024-10-01'),
-(15, 2, 10, 'DIVIDEND',  25,   2.80, 'CHF', 1.00, '2024-04-26');
+INSERT INTO transactions (id, account_id, security_id, transaction_type, quantity, price, fee, tax, transaction_currency, fx_rate_to_portfolio, transaction_date) VALUES
+(1,  1, 1,  'BUY',      25,  132.00,  9.00, 14.85, 'USD', 0.90, '2021-01-15'),
+(2,  1, 2,  'BUY',      10,  232.00,  9.00,  6.96, 'USD', 0.90, '2021-02-10'),
+(3,  1, 3,  'BUY',      20,  145.00,  9.00,  8.70, 'USD', 0.90, '2021-04-05'),
+(4,  1, 4,  'BUY',      15,  126.00,  9.00,  5.67, 'USD', 0.90, '2021-06-01'),
+(5,  1, 5,  'BUY',      12,  168.00,  9.00,  6.05, 'USD', 0.90, '2021-08-20'),
+(6,  1, 6,  'BUY',       8,  285.00,  9.00,  6.84, 'USD', 0.90, '2021-03-15'),
+(7,  1, 7,  'BUY',      15,  230.00,  9.00, 10.35, 'USD', 0.90, '2021-01-28'),
+(8,  1, 8,  'BUY',      10,  207.00,  9.00,  6.21, 'USD', 0.91, '2020-09-10'),
+(9,  1, 9,  'BUY',      20,  104.00,  9.00,  6.24, 'USD', 0.91, '2020-10-05'),
+(10, 2, 10, 'BUY',      25,   98.00,  9.00, 11.03, 'CHF', 1.00, '2020-01-20'),
+-- Dividenden (keine Gebühren)
+(11, 1, 1,  'DIVIDEND',  25,   0.96, NULL, NULL, 'USD', 0.89, '2024-02-15'),
+(12, 1, 2,  'DIVIDEND',  10,   2.94, NULL, NULL, 'USD', 0.89, '2024-03-14'),
+(13, 1, 8,  'DIVIDEND',  10,   2.08, NULL, NULL, 'USD', 0.89, '2024-09-02'),
+(14, 1, 9,  'DIVIDEND',  20,   1.25, NULL, NULL, 'USD', 0.89, '2024-10-01'),
+(15, 2, 10, 'DIVIDEND',  25,   2.80, NULL, NULL, 'CHF', 1.00, '2024-04-26');
 
 -- Positionen (Gesamtbestand)
 INSERT INTO positions (id, account_id, security_id, total_quantity, average_purchase_price) VALUES

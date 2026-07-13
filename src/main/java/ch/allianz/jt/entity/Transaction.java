@@ -16,6 +16,8 @@ public class Transaction {
     private String transactionType; // BUY / SELL / SPLIT / ACQUISITION / MERGER
     private Double quantity;
     private Double price;
+    private Double fee;   // Broker-Kommission / Transaktionsgebühr
+    private Double tax;   // Stempelsteuer, Transaktionssteuer
     private String transactionCurrency;
     private BigDecimal fxRateToPortfolio;
     private LocalDate transactionDate;
@@ -41,6 +43,12 @@ public class Transaction {
 
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+
+    public Double getFee() { return fee; }
+    public void setFee(Double fee) { this.fee = fee; }
+
+    public Double getTax() { return tax; }
+    public void setTax(Double tax) { this.tax = tax; }
 
     public String getTransactionCurrency() { return transactionCurrency; }
     public void setTransactionCurrency(String transactionCurrency) { this.transactionCurrency = transactionCurrency; }

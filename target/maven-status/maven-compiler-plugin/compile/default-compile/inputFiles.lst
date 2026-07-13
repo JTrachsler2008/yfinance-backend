@@ -101,6 +101,7 @@ C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\Thumbnail.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\LocationInner.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\repository\TransactionRepository.java
+C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\controller\SparplanController.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\SecurityServiceImpl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\generated\model\ClickThroughUrl.java
 C:\dev\Allianz\Java\yfinance-backend\src\main\java\ch\allianz\jt\service\impl\TransactionServiceImpl.java
