@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Portfolio-App — Dokumentation</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #555555;
+    --line: #dcdcdc;
+    --code-bg: #f4f4f4;
+    --accent: #1a56db;
+    --accent-2: #b45309;
+    --heading: #14328c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161a;
+      --ink: #e8e8e8;
+      --muted: #a0a0a0;
+      --line: #333333;
+      --code-bg: #1e2126;
+      --accent: #6d9bff;
+      --accent-2: #e0a35c;
+      --heading: #8fb2ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161a; --ink: #e8e8e8; --muted: #a0a0a0; --line: #333333; --code-bg: #1e2126; --accent: #6d9bff; --accent-2: #e0a35c; --heading: #8fb2ff;
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff; --ink: #1a1a1a; --muted: #555555; --line: #dcdcdc; --code-bg: #f4f4f4; --accent: #1a56db; --accent-2: #b45309; --heading: #14328c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 15.5px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 48px 24px 100px;
+  }
+
+  h1 { font-size: 30px; margin: 0 0 6px; color: var(--heading); }
+  h2 { font-size: 21px; margin: 44px 0 8px; padding-top: 12px; border-top: 2px solid var(--accent); color: var(--heading); }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--heading); }
+  p { margin: 0 0 12px; max-width: 72ch; }
+
+  .subtitle { color: var(--muted); font-size: 15px; margin: 0 0 24px; max-width: 72ch; }
+
+  code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--code-bg);
+    color: var(--accent-2);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border-left: 3px solid var(--accent);
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; color: inherit; }
+
+  a { color: var(--accent); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 8px 0 16px;
+  }
+  th, td {
+    text-align: left;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th { background: #14328c; color: #fff; font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+
+  ul, ol { padding-left: 22px; margin: 0 0 14px; }
+  li { margin-bottom: 4px; }
+
+  .toc {
+    margin: 20px 0 36px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .toc span { margin-right: 4px; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .toc a::after { content: " · "; color: var(--line); }
+  .toc a:last-child::after { content: ""; }
+
+  .note {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--accent-2);
+    margin: 12px 0;
+  }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Portfolio-Management-App</h1>
+<p class="subtitle">Java/Spring-Boot-Backend + React-Frontend zur Nachverfolgung eines Wertschriftenportfolios: Transaktionen, Performance (TWR/MWR), Risikokennzahlen, Rebalancing und Was-wäre-wenn-Simulationen. Kursdaten kommen live von Yahoo Finance über einen Python-Microservice.</p>
+
+<p class="toc">
+  <a href="#überblick">Überblick</a>
+  <a href="#architektur">Architektur</a>
+  <a href="#stack">Tech-Stack</a>
+  <a href="#setup">Lokal starten</a>
+  <a href="#dashboard">Dashboard</a>
+  <a href="#performance">Performance</a>
+  <a href="#risiko">Risiko</a>
+  <a href="#transaktionen">Transaktionen</a>
+  <a href="#tranchen">Einzelne Kauf-Tranchen</a>
+  <a href="#szenario">Szenarioanalyse</a>
+  <a href="#rebalancing">Rebalancing im Detail</a>
+  <a href="#api">API-Referenz</a>
+  <a href="#datenmodell">Datenmodell</a>
+  <a href="#logging">Logging</a>
+  <a href="#tests">Tests &amp; Testabdeckung</a>
+  <a href="#einschraenkungen">Bekannte Einschränkungen</a>
+</p>
+
+<h2 id="überblick">Überblick</h2>
+<p>Man legt ein oder mehrere Portfolios an, erfasst darin Käufe, Verkäufe und Dividenden, und die App berechnet daraus: wie viel das Portfolio heute wert ist, wie gut es sich wirklich entwickelt hat (unabhängig davon, wann Geld ein- oder ausgezahlt wurde), wie riskant es im Vergleich zum Markt ist, und wie sich verschiedene Anlagestrategien historisch geschlagen hätten — inklusive automatischem Rebalancing.</p>
+<p>Ein selbst gebautes, schlankeres Gegenstück zu Tools wie Portfolio Performance oder Parqet, auf die eigenen Bedürfnisse zugeschnitten.</p>
+
+<h2 id="architektur">Architektur</h2>
+<p>Drei Prozesse laufen parallel:</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Prozess</th><th>Technologie</th><th>Port</th><th>Aufgabe</th></tr></thead>
+  <tbody>
+    <tr><td>Frontend</td><td>React + Vite</td><td>5173</td><td>Bedienoberfläche im Browser, fragt nur das Backend ab</td></tr>
+    <tr><td>Backend</td><td>Spring Boot (Java 17)</td><td>8080</td><td>Geschäftslogik, REST-API, H2-Datei-Datenbank</td></tr>
+    <tr><td>Kurs-Dienst</td><td>Python (yFinance)</td><td>8000</td><td>Live- und historische Kurse, Fallback auf Alpha Vantage</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Das Frontend hat keinen direkten Kontakt zum Kurs-Dienst — es fragt immer nur das Backend, das bei Bedarf selbst beim Kurs-Dienst nachfragt.</p>
+
+<h2 id="stack">Tech-Stack</h2>
+<ul>
+  <li><strong>Backend:</strong> Java 17, Spring Boot 3.1.3, Spring Data JPA, H2 (Datei-Modus), Mockito/JUnit 5, JaCoCo</li>
+  <li><strong>Frontend:</strong> React, Vite, React Router, Recharts, Axios</li>
+  <li><strong>Kursdaten:</strong> yFinance (primär), Alpha Vantage (Fallback), eigene <code>fx_rate</code>-Tabelle für Währungsumrechnung</li>
+  <li><strong>Tooling:</strong> Bruno (API-Testsammlung), JaCoCo-Coverage-Reports</li>
+</ul>
+
+<h2 id="setup">Lokal starten</h2>
+<ol>
+  <li>Kurs-Dienst starten (Python, Port 8000) — ohne ihn laufen keine Kurse.</li>
+  <li>Backend starten: im Ordner <code>yfinance-backend</code> <code>mvn spring-boot:run</code> ausführen. Läuft auf <code>http://localhost:8080</code>.</li>
+  <li>Frontend starten: im Ordner <code>yfinance-frontend</code> <code>npm run dev</code> ausführen. Läuft auf <code>http://localhost:5173</code> — das öffnet man im Browser.</li>
+</ol>
+<p class="note">Zur Datenbank: <code>spring.jpa.hibernate.ddl-auto=create-drop</code> — bei jedem Backend-Neustart wird die Datenbank aus <code>data.sql</code> neu aufgebaut. Alles, was zur Laufzeit angelegt wird (neue Portfolios, Transaktionen), geht bei einem Neustart verloren. Bewusste Entwicklungs-Einstellung, kein Bug.</p>
+
+<h2 id="dashboard">Dashboard</h2>
+<p><code>/</code> — Gesamtwert, Gewinn/Verlust und Rendite auf einen Blick. Aufteilung des Portfolios nach Position als Kreisdiagramm, sowie nach Sektor, Land und Handelswährung als klickbare Filter. Dazu aktuelle Finanznachrichten zu den grössten Positionen.</p>
+
+<h2 id="performance">Performance</h2>
+<p><code>/performance</code> — Renditekennzahlen und Wertverlauf.</p>
+<ul>
+  <li><strong>TWR</strong> (zeitgewichtete Rendite): reine Anlage-Performance, unabhängig von Ein-/Auszahlungen — vergleichbar mit einem Index.</li>
+  <li><strong>MWR</strong> (geldgewichtete Rendite): berücksichtigt Timing der eigenen Ein-/Auszahlungen.</li>
+  <li>Wertverlauf über 12/24/36 Monate oder frei wählbaren Zeitraum, optional mit Benchmark-Overlay (S&amp;P 500, Nasdaq, Gold, …).</li>
+  <li>Dividenden pro Jahr, realisierte Gewinne/Verluste (Durchschnittspreis-Methode, siehe <a href="#tranchen">Abschnitt zu den Kauf-Tranchen</a> zur Abweichung von der Tranchen-Methode).</li>
+  <li>Zielallokation pro Sektor mit Abweichungsanzeige.</li>
+</ul>
+
+<h2 id="risiko">Risiko</h2>
+<p><code>/risiko</code> — Kennzahlen für Gesamtportfolio und jede Position: Volatilität, Sharpe Ratio, Beta, maximaler Drawdown, Value-at-Risk. Rendite/Risiko-Diagramm mit jeder Position als Blase, Benchmarks als Vergleichspunkte.</p>
+
+<h2 id="transaktionen">Transaktionen</h2>
+<p><code>/transaktionen</code> — Käufe, Verkäufe, Dividenden erfassen. Symbol-/Namenssuche mit Aktie/ETF-Kennzeichnung. Optional Broker-Gebühr und Stempelsteuer, die in den Einstandspreis einfliessen.</p>
+
+<h2 id="tranchen">Einzelne Kauf-Tranchen</h2>
+<p>Jeder Kauf einer Position kann einzeln statt nur als Durchschnitt betrachtet werden. Verkauft man einen Teil, wird immer zuerst die <strong>älteste offene Tranche</strong> aufgelöst, so wie es steuerlich in den meisten Ländern gehandhabt wird.</p>
+<p>Endpunkt: <code>GET /positions/account/{accountId}/security/{securityId}/lots</code> — berechnet rein lesend aus der Transaktionshistorie, ohne eigenes Datenmodell für Tranchen. Liefert pro Tranche zusätzlich einen monatlichen Wertverlauf (<code>verlauf</code>), indexiert auf 100 am Kauftag, damit sich mehrere Tranchen unabhängig von ihrem Kaufdatum optisch vergleichen lassen.</p>
+<p class="note">Bekannte Inkonsistenz: Die „Realisierte Gewinne“-Tabelle (Performance-Seite) rechnet mit dem gleitenden Durchschnittspreis, die Tranchen-Ansicht rechnet nach dem Prinzip „ältester Kauf zuerst verkauft“. Beide können für dieselbe Position unterschiedliche Gewinnzahlen liefern. Noch nicht vereinheitlicht.</p>
+
+<h2 id="szenario">Szenarioanalyse</h2>
+<p><code>/szenario</code> — vier Werkzeuge für Was-wäre-wenn-Rechnungen, ohne echtes Geld zu bewegen:</p>
+<ul>
+  <li><strong>Asset-Klassen-Vergleich:</strong> Entwicklung von 100 CHF über 10 Jahre in Aktien, Gold, Anleihen, Immobilien, Bitcoin — plus zwei eigene Portfolio-Zusammensetzungen im direkten Vergleich.</li>
+  <li><strong>Sparplan-Simulation:</strong> regelmässige Einzahlung in mehrere Positionen mit Ziel-Gewichtung über einen historischen Zeitraum. Liefert Endwert, CAGR, Max Drawdown — optional mit Rebalancing (siehe unten).</li>
+  <li><strong>Kaufsimulation:</strong> Auswirkung eines hypothetischen Kaufs heute auf die Portfolio-Gewichtung.</li>
+  <li><strong>Historischer Backtest:</strong> Entwicklung einer Position seit einem frei wählbaren Kaufdatum in der Vergangenheit.</li>
+</ul>
+
+<h2 id="rebalancing">Rebalancing im Detail</h2>
+
+<h3>Das Grundproblem: Drift</h3>
+<p>Eine Ziel-Allokation (z. B. 60 % SPY / 40 % QQQ) stimmt nur am Tag der Investition exakt. Danach entwickeln sich Positionen unterschiedlich schnell:</p>
+<pre>Start:            SPY 600 CHF · QQQ 400 CHF   (60 / 40)
+Nach 1 Jahr:      SPY +10 % → 660 CHF
+                  QQQ +30 % → 520 CHF
+Gesamtwert:       1'180 CHF
+Ist-Allokation:   SPY 55.9 % · QQQ 44.1 %   ← Drift von 4.1 Punkten</pre>
+<p>Ohne Eingriff wächst diese Abweichung weiter — das Portfolio wird schrittweise riskanter als geplant.</p>
+
+<h3>Was Rebalancing tut</h3>
+<p>Der bestehende Gesamtwert wird neu nach der Ziel-Gewichtung verteilt:</p>
+<pre>Soll SPY = 1'180 × 60 % = 708 CHF   → ist 660 CHF → +48 CHF (fiktiver Zukauf)
+Soll QQQ = 1'180 × 40 % = 472 CHF   → ist 520 CHF → −48 CHF (fiktiver Verkauf)</pre>
+<p class="note">Rebalancing braucht kein zusätzliches Geld — die 48 CHF, die bei SPY dazukommen, sind exakt die 48 CHF, die bei QQQ weggehen. Reine Umschichtung des bestehenden Vermögens, unabhängig von der laufenden Sparplan-Einzahlung. Live nachgewiesen: bei 111'147 CHF Portfoliowert wurden 4'316 CHF umgeschichtet — ein Vielfaches der monatlichen 500-CHF-Einzahlung.</p>
+
+<h3>Zwei Auslöse-Modi</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Modus</th><th>Parameter</th><th>Verhalten</th></tr></thead>
+  <tbody>
+    <tr><td>Festes Intervall</td><td><code>rebalancingModus=intervall</code>, <code>rebalancingIntervalMonate</code></td><td>Rebalanciert zu festen Kalender-Zeitpunkten, z. B. jährlich</td></tr>
+    <tr><td>Toleranzband</td><td><code>rebalancingModus=schwelle</code>, <code>rebalancingBandProzent</code></td><td>Rebalanciert erst, wenn eine Position um mehr als X Prozentpunkte vom Ziel abweicht (z. B. bei 60 % Ziel und Band 10 erst ausserhalb von 50–70 %). Seltenere, aber grössere Eingriffe.</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Warum die Abweichung am Ende nie exakt 0 % ist</h3>
+<p>Das letzte Rebalancing findet nicht zwangsläufig am letzten Simulationstag statt. Seit diesem Zeitpunkt läuft die Allokation wieder ein Stück auseinander — das ist die Drift <em>seit dem letzten Rebalancing</em>, nicht seit Beginn der Simulation. Ein engeres Intervall bzw. Band hält diesen Rest kleiner.</p>
+
+<p class="note">Bekannte Einschränkung: Die simulierte Umschichtung wird direkt als Neuberechnung der Stückzahl behandelt, nicht als echter Kauf/Verkauf. Dadurch fallen keine simulierten Transaktionskosten und keine Kapitalgewinnsteuer an. Für einen reinen Renditevergleich (mit/ohne Rebalancing) ist das in Ordnung, als Grundlage für die reale Steuerlast nicht.</p>
+
+<h2 id="api">API-Referenz</h2>
+<p>Basis-Adresse: <code>http://localhost:8080</code>. Vollständige, ausführbare Sammlung unter <code>bruno/yfinance-api/</code> (App: <a href="https://www.usebruno.com" target="_blank" rel="noopener">Bruno</a>).</p>
+
+<h3>Portfolios</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Methode</th><th>Pfad</th><th>Beschreibung</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/portfolios</code></td><td>Alle Portfolios</td></tr>
+<tr><td>POST</td><td><code>/portfolios/{userId}</code></td><td>Portfolio erstellen</td></tr>
+<tr><td>PATCH</td><td><code>/portfolios/{id}/currency</code></td><td>Basiswährung ändern</td></tr>
+<tr><td>DELETE</td><td><code>/portfolios/{id}</code></td><td>Portfolio inkl. Konten, Positionen, Transaktionen löschen (kaskadiert)</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Performance</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Methode</th><th>Pfad</th><th>Beschreibung</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/portfolios/{id}/performance?currency=</code></td><td>TWR, MWR, Gesamtwert, Dividenden</td></tr>
+<tr><td>GET</td><td><code>/portfolios/{id}/history?months=&amp;from=&amp;to=</code></td><td>Monatlicher Wertverlauf</td></tr>
+<tr><td>GET</td><td><code>/portfolios/{id}/realized-gains</code></td><td>Realisierte Gewinne (Durchschnittspreis)</td></tr>
+<tr><td>GET</td><td><code>/portfolios/{id}/dividends?currency=</code></td><td>Dividenden pro Jahr</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Risiko &amp; Vergleich</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Methode</th><th>Pfad</th><th>Beschreibung</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/portfolios/{id}/risk</code></td><td>Volatilität, Sharpe, Beta, Max Drawdown, VaR95</td></tr>
+<tr><td>GET</td><td><code>/compare/benchmark?symbol=&amp;months=</code></td><td>Normierter Einzel-Benchmark</td></tr>
+<tr><td>GET</td><td><code>/compare/risk-benchmarks</code></td><td>Rendite/Volatilität für Index-Benchmarks</td></tr>
+<tr><td>GET</td><td><code>/compare/portfolios?p1=&amp;p2=</code></td><td>Zwei eigene Portfolio-Zusammensetzungen vergleichen</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Sparplan &amp; Positionen</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Methode</th><th>Pfad</th><th>Beschreibung</th></tr></thead>
+<tbody>
+<tr><td>GET</td><td><code>/simulate/sparplan?startDate=&amp;betrag=&amp;intervallMonate=&amp;positionen=&amp;rebalancing=&amp;rebalancingModus=&amp;rebalancingIntervalMonate=&amp;rebalancingBandProzent=</code></td><td>Sparplan-Simulation, optional mit Rebalancing (Intervall oder Toleranzband)</td></tr>
+<tr><td>GET</td><td><code>/positions/account/{id}/security/{id}/lots</code></td><td>Offene Kauf-Tranchen einer Position inkl. Wertverlauf</td></tr>
+<tr><td>POST</td><td><code>/transactions/{accountId}</code></td><td>Kauf, Verkauf oder Dividende erfassen</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="datenmodell">Datenmodell (vereinfacht)</h2>
+<ul>
+  <li><strong>Portfolio</strong> — oberste Einheit, hat eine Basiswährung, gehört einem Nutzer.</li>
+  <li><strong>Konto</strong> — gehört zu einem Portfolio, hat einen Bargeldbestand in einer bestimmten Währung.</li>
+  <li><strong>Position</strong> — aktueller Bestand einer Aktie/ETF in einem Konto (Menge + Durchschnitts-Einstandspreis).</li>
+  <li><strong>Transaktion</strong> — einzelner Kauf, Verkauf oder Dividende. Aus der vollständigen Historie werden Positionen, realisierte Gewinne und einzelne Kauf-Tranchen abgeleitet.</li>
+  <li><strong>Security</strong> — Stammdaten einer Aktie/ETF (Symbol, Name, Sektor, Land, Handelswährung).</li>
+</ul>
+
+<h2 id="logging">Logging</h2>
+<p>Konfiguriert in <code>application.properties</code>:</p>
+<pre>logging.level.root=INFO
+logging.level.ch.allianz.jt=DEBUG
+logging.level.org.springframework=WARN
+logging.level.org.hibernate=WARN</pre>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Stufe</th><th>Verwendung</th></tr></thead>
+<tbody>
+<tr><td>DEBUG</td><td>Detail-Infos zur Fehlersuche, z. B. „Kauf-Tranchen berechnen“</td></tr>
+<tr><td>INFO</td><td>Normale Abläufe, z. B. „Transaktion gespeichert“</td></tr>
+<tr><td>WARN</td><td>Erwartete Probleme ohne Absturz, z. B. „Portfolio nicht gefunden“</td></tr>
+<tr><td>ERROR</td><td>Unerwarteter Fehler mit vollem Stacktrace, ausschliesslich im globalen Exception-Handler</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="tests">Tests &amp; Testabdeckung</h2>
+<p>Backend-Logik ist mit JUnit/Mockito abgedeckt, Testabdeckung wird mit JaCoCo gemessen.</p>
+<pre>mvn test                              # alle Tests ausführen
+target/site/jacoco/index.html         # Abdeckungs-Report nach dem Testlauf</pre>
+<p>In IntelliJ zeigt ein Rechtsklick auf <code>src/test/java</code> → „Run 'All Tests' with Coverage" die Abdeckung direkt im Editor an (Class/Method/Line-Prozentsatz).</p>
+<p>Stand: 11 Testklassen, 64+ Testmethoden, ~40 % Instruktions-Abdeckung. Gut abgedeckt: PortfolioServiceImpl, GlobalExceptionHandler (je 100 %), SparplanController, SimulationServiceImpl, RiskServiceImpl, CompareController (je ≥90 %). Offen: reine Lese-Controller mit wenig eigener Logik, sowie <code>SecurityServiceImpl.search()</code> (nutzt intern erzeugtes <code>RestTemplate</code> gegen eine echte externe URL, ohne Code-Umbau nicht sauber mockbar).</p>
+
+<h2 id="einschraenkungen">Bekannte Einschränkungen</h2>
+<ul>
+  <li>Keine Datenpersistenz über Neustarts hinweg — die Datenbank wird bei jedem Start aus der Vorlage neu aufgebaut.</li>
+  <li>Zwei Berechnungsmethoden für Gewinne (Durchschnittspreis vs. Kauf-Tranchen) können für dieselbe Position unterschiedliche Zahlen liefern.</li>
+  <li>Rebalancing berücksichtigt keine Transaktionskosten oder Kapitalgewinnsteuer.</li>
+  <li>Die Tranchen-Ansicht zeigt nur den offenen Bestand, keine Historie bereits verkaufter Tranchen.</li>
+</ul>
+
+<footer>Portfolio-Management-App · Interne Projektdokumentation</footer>
+
+</div>
+</body>
+</html>

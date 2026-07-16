@@ -13,11 +13,11 @@ public class Transaction {
     @GeneratedValue
     private Long id;
 
-    private String transactionType; // BUY / SELL / SPLIT / ACQUISITION / MERGER
+    private String transactionType;
     private Double quantity;
     private Double price;
-    private Double fee;   // Broker-Kommission / Transaktionsgebühr
-    private Double tax;   // Stempelsteuer, Transaktionssteuer
+    private Double fee;
+    private Double tax;
     private String transactionCurrency;
     private BigDecimal fxRateToPortfolio;
     private LocalDate transactionDate;

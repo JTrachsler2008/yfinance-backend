@@ -1,0 +1,15 @@
+meta {
+  name: Portfolio-Performance
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/portfolios/1/performance?currency=CHF
+  body: none
+  auth: none
+}
+
+params:query {
+  currency: CHF
+}

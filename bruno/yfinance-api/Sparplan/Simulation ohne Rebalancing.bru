@@ -1,0 +1,18 @@
+meta {
+  name: Simulation ohne Rebalancing
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/simulate/sparplan?startDate=2015-01-01&betrag=500&intervallMonate=1&positionen=SPY:60,QQQ:40
+  body: none
+  auth: none
+}
+
+params:query {
+  startDate: 2015-01-01
+  betrag: 500
+  intervallMonate: 1
+  positionen: SPY:60,QQQ:40
+}

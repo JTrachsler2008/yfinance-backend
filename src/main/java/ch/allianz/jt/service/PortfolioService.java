@@ -13,4 +13,6 @@ public interface PortfolioService {
     Optional<Portfolio> getById(Long id);
 
     Portfolio updateCurrency(Long id, String currency);
+
+    void deletePortfolio(Long id);
 }

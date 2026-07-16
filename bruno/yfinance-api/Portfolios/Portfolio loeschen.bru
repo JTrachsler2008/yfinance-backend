@@ -1,0 +1,16 @@
+meta {
+  name: Portfolio loeschen
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/portfolios/999
+  body: none
+  auth: none
+}
+
+docs {
+  Vorsicht: löscht das Portfolio inkl. aller Konten, Positionen und Transaktionen.
+  ID 999 als Platzhalter, damit nicht versehentlich echte Testdaten gelöscht werden.
+}

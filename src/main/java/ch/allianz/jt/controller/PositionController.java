@@ -5,6 +5,7 @@ import ch.allianz.jt.service.PositionService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/positions")
@@ -26,5 +27,8 @@ public class PositionController {
         return positionService.getByAccountId(accountId);
     }
 
-
+    @GetMapping("/account/{accountId}/security/{securityId}/lots")
+    public List<Map<String, Object>> getLotsFifo(@PathVariable Long accountId, @PathVariable Long securityId) {
+        return positionService.getLotsFifo(accountId, securityId);
+    }
 }

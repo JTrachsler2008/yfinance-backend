@@ -1,0 +1,18 @@
+meta {
+  name: Portfolios vergleichen
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/compare/portfolios?p1=SPY:60,AGG:40&p2=QQQ:60,GLD:20,BTC-USD:20&name1=Konservativ&name2=Aggressiv
+  body: none
+  auth: none
+}
+
+params:query {
+  p1: SPY:60,AGG:40
+  p2: QQQ:60,GLD:20,BTC-USD:20
+  name1: Konservativ
+  name2: Aggressiv
+}

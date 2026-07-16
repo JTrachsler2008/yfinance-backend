@@ -1,0 +1,16 @@
+meta {
+  name: Historie
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/portfolios/1/history?months=36&currency=CHF
+  body: none
+  auth: none
+}
+
+params:query {
+  months: 36
+  currency: CHF
+}

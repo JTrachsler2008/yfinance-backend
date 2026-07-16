@@ -1,0 +1,15 @@
+meta {
+  name: Aktie suchen
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/securities/search?query=Apple
+  body: none
+  auth: none
+}
+
+params:query {
+  query: Apple
+}

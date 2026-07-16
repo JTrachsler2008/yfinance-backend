@@ -107,7 +107,6 @@ public class SecurityServiceImpl implements SecurityService {
             var entity = new org.springframework.http.HttpEntity<>(headers);
             var response = restTemplate.exchange(url, org.springframework.http.HttpMethod.GET, entity, String.class);
             JsonNode root = objectMapper.readTree(response.getBody());
-            // API returns quotes directly at root level
             JsonNode quotes = root.path("quotes");
             if (quotes.isArray()) {
                 for (JsonNode q : quotes) {

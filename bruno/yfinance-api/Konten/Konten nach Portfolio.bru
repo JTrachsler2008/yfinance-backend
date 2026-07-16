@@ -1,0 +1,15 @@
+meta {
+  name: Konten nach Portfolio
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/accounts?portfolioId=1
+  body: none
+  auth: none
+}
+
+params:query {
+  portfolioId: 1
+}

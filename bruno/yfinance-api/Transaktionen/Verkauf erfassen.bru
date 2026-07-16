@@ -1,0 +1,22 @@
+meta {
+  name: Verkauf erfassen
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/transactions/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "transactionType": "SELL",
+    "quantity": 5,
+    "price": 175.00,
+    "fee": 9.00,
+    "security": { "id": 1 },
+    "transactionDate": "2026-06-01"
+  }
+}

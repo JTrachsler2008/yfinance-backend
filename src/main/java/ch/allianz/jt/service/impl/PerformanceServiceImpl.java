@@ -116,7 +116,6 @@ public class PerformanceServiceImpl implements PerformanceService {
             totalCost = totalCost.add(pos.getMarketValue().subtract(pos.getGainLoss()));
         }
 
-        // Dividendenerträge summieren (konvertiert in Portfolio-Währung)
         List<Transaction> allTxns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         BigDecimal totalDividends = BigDecimal.ZERO;
         for (Transaction t : allTxns) {
@@ -370,7 +369,6 @@ public class PerformanceServiceImpl implements PerformanceService {
         LocalDate fromDate = (from != null && !from.isBlank()) ? LocalDate.parse(from) : LocalDate.now().minusMonths(months);
         LocalDate toDate = (to != null && !to.isBlank()) ? LocalDate.parse(to) : LocalDate.now().minusDays(1);
 
-        // Fetch historical prices for all securities in range
         Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
         Map<Long, Security> securityMap = new HashMap<>();
         for (Transaction t : txns) {
@@ -382,7 +380,6 @@ public class PerformanceServiceImpl implements PerformanceService {
             }
         }
 
-        // Build month-end dates
         List<LocalDate> monthEnds = new ArrayList<>();
         LocalDate cursor = fromDate.withDayOfMonth(fromDate.lengthOfMonth());
         while (!cursor.isAfter(toDate)) {
@@ -395,7 +392,6 @@ public class PerformanceServiceImpl implements PerformanceService {
 
         int txIdx = 0;
         for (LocalDate monthEnd : monthEnds) {
-            // Apply all transactions up to this month end
             while (txIdx < txns.size() && !txns.get(txIdx).getTransactionDate().isAfter(monthEnd)) {
                 Transaction t = txns.get(txIdx);
                 if (t.getSecurity() != null) {

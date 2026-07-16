@@ -1,0 +1,20 @@
+meta {
+  name: Simulation mit Rebalancing
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/simulate/sparplan?startDate=2015-01-01&betrag=500&intervallMonate=1&positionen=SPY:60,QQQ:40&rebalancing=true&rebalancingIntervalMonate=12
+  body: none
+  auth: none
+}
+
+params:query {
+  startDate: 2015-01-01
+  betrag: 500
+  intervallMonate: 1
+  positionen: SPY:60,QQQ:40
+  rebalancing: true
+  rebalancingIntervalMonate: 12
+}

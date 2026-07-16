@@ -1,0 +1,18 @@
+meta {
+  name: Portfolio erstellen
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/portfolios/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Test-Portfolio",
+    "baseCurrency": "CHF"
+  }
+}

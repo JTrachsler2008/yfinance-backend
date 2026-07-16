@@ -1,0 +1,23 @@
+meta {
+  name: Kauf erfassen
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/transactions/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "transactionType": "BUY",
+    "quantity": 10,
+    "price": 150.00,
+    "fee": 9.00,
+    "tax": 14.85,
+    "security": { "id": 1 },
+    "transactionDate": "2026-01-15"
+  }
+}

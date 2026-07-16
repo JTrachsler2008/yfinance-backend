@@ -1,0 +1,15 @@
+meta {
+  name: Waehrung aendern
+  type: http
+  seq: 4
+}
+
+patch {
+  url: {{baseUrl}}/portfolios/1/currency?currency=USD
+  body: none
+  auth: none
+}
+
+params:query {
+  currency: USD
+}

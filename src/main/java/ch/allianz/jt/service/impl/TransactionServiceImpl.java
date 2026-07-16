@@ -135,7 +135,9 @@ public class TransactionServiceImpl implements TransactionService {
         }
 
         transaction.setAccount(account);
-        transaction.setTransactionDate(LocalDate.now());
+        if (transaction.getTransactionDate() == null) {
+            transaction.setTransactionDate(LocalDate.now());
+        }
         accountRepository.save(account);
 
         Transaction saved = transactionRepository.save(transaction);

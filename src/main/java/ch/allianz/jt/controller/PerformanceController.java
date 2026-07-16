@@ -55,7 +55,6 @@ public class PerformanceController {
         List<Transaction> txns = transactionRepository.findByPortfolioIdOrderByDate(id);
         List<Map<String, Object>> result = new ArrayList<>();
 
-        // Track running avg buy price per security
         Map<Long, BigDecimal> avgBuyPrice = new HashMap<>();
         Map<Long, Double> totalQty = new HashMap<>();
 

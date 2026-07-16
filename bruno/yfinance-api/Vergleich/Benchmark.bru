@@ -1,0 +1,16 @@
+meta {
+  name: Benchmark
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/compare/benchmark?symbol=SPY&months=36
+  body: none
+  auth: none
+}
+
+params:query {
+  symbol: SPY
+  months: 36
+}

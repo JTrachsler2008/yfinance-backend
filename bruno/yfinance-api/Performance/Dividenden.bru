@@ -1,0 +1,15 @@
+meta {
+  name: Dividenden
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/portfolios/1/dividends?currency=CHF
+  body: none
+  auth: none
+}
+
+params:query {
+  currency: CHF
+}

@@ -39,4 +39,10 @@ public class PortfolioController {
     public Portfolio updateCurrency(@PathVariable Long id, @RequestParam String currency) {
         return portfolioService.updateCurrency(id, currency);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        portfolioService.deletePortfolio(id);
+        return ResponseEntity.noContent().build();
+    }
 }

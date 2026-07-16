@@ -1,0 +1,17 @@
+meta {
+  name: Historie mit Datumsbereich
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/portfolios/1/history?from=2024-01-01&to=2024-06-01&currency=CHF
+  body: none
+  auth: none
+}
+
+params:query {
+  from: 2024-01-01
+  to: 2024-06-01
+  currency: CHF
+}

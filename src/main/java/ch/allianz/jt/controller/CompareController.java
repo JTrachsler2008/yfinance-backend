@@ -3,6 +3,8 @@ package ch.allianz.jt.controller;
 import ch.allianz.jt.client.YFinanceClient;
 import ch.allianz.jt.generated.model.HistoricalPrice;
 import ch.allianz.jt.generated.model.HistoricalResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,8 @@ import java.util.*;
 @RestController
 @RequestMapping("/compare")
 public class CompareController {
+
+    private static final Logger log = LoggerFactory.getLogger(CompareController.class);
 
     private final YFinanceClient yFinanceClient;
 
@@ -54,19 +58,20 @@ public class CompareController {
                         if (!allDates.contains(ds)) allDates.add(ds);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Historische Kurse für {} konnten nicht geladen werden: {}", symbol, e.getMessage());
+            }
         }
 
         Collections.sort(allDates);
 
-        // Normalize to 100 at first data point per asset
         List<Map<String, Object>> chartData = new ArrayList<>();
         Map<String, BigDecimal> baseValues = new HashMap<>();
 
         for (String dateStr : allDates) {
             LocalDate date = LocalDate.parse(dateStr);
             Map<String, Object> point = new LinkedHashMap<>();
-            point.put("date", dateStr.substring(0, 7)); // YYYY-MM
+            point.put("date", dateStr.substring(0, 7));
 
             boolean hasAny = false;
             for (String symbol : assets.keySet()) {
@@ -90,7 +95,6 @@ public class CompareController {
                 hasAny = true;
             }
 
-            // Cash is always 100 (no return, no loss)
             point.put("CASH", BigDecimal.valueOf(100));
             if (hasAny) chartData.add(point);
         }
@@ -137,7 +141,6 @@ public class CompareController {
         allSymbols.addAll(weights1.keySet());
         allSymbols.addAll(weights2.keySet());
 
-        // Lade Preisdaten für alle benötigten Symbole
         Map<String, Map<LocalDate, BigDecimal>> priceData = new LinkedHashMap<>();
         List<String> allDates = new ArrayList<>();
 
@@ -157,12 +160,13 @@ public class CompareController {
                         if (!allDates.contains(ds)) allDates.add(ds);
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Historische Kurse für {} konnten nicht geladen werden: {}", symbol, e.getMessage());
+            }
         }
 
         Collections.sort(allDates);
 
-        // Normalisiere jeden ETF auf 100 am ersten Punkt
         Map<String, BigDecimal> baseValues = new HashMap<>();
         List<Map<String, Object>> chartData = new ArrayList<>();
 
@@ -171,7 +175,6 @@ public class CompareController {
             Map<String, Object> point = new LinkedHashMap<>();
             point.put("date", dateStr.substring(0, 7));
 
-            // Normalisierte Werte pro Symbol setzen
             Map<String, BigDecimal> normalizedPrices = new HashMap<>();
             for (String symbol : allSymbols) {
                 Map<LocalDate, BigDecimal> prices = priceData.get(symbol);
@@ -184,7 +187,6 @@ public class CompareController {
                 normalizedPrices.put(symbol, price.divide(base, 6, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)));
             }
 
-            // Portfolio-Werte als gewichteter Durchschnitt
             BigDecimal v1 = portfolioValue(weights1, normalizedPrices);
             BigDecimal v2 = portfolioValue(weights2, normalizedPrices);
 
@@ -259,7 +261,6 @@ public class CompareController {
 
                 if (closes.size() < 6) continue;
 
-                // Monthly returns
                 List<Double> returns = new ArrayList<>();
                 for (int i = 1; i < closes.size(); i++) {
                     double r = closes.get(i).subtract(closes.get(i - 1))
@@ -283,7 +284,9 @@ public class CompareController {
                 row.put("volatility", BigDecimal.valueOf(annualVol).setScale(2, RoundingMode.HALF_UP));
                 row.put("annualizedReturn", BigDecimal.valueOf(annualReturn).setScale(2, RoundingMode.HALF_UP));
                 result.add(row);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Risiko-Benchmark für {} konnte nicht berechnet werden: {}", symbol, e.getMessage());
+            }
         }
         return result;
     }
