@@ -79,29 +79,6 @@ uvicorn main:app --port 8000
 |---------|------|-------------|
 | GET | `/simulate/sparplan?startDate=2015-01-01&betrag=500&intervallMonate=1&positionen=SPY:60,QQQ:40` | Sparplan simulieren, gibt CAGR, Max Drawdown, Endwert und Chart-Daten zurück |
 
-## Features
-
-### PA-01: Gebühren & Steuern
-Transaktionen können `fee` (Broker-Kommission) und `tax` (Stempelsteuer) enthalten. Diese fliessen in den durchschnittlichen Einstandspreis ein, nicht in den Cash-Abzug.
-
-### PA-02: Dividenden
-Dividenden-Transaktionen werden im Portfolio-Gesamtwert eingerechnet. Endpunkt `/dividends` liefert Erträge pro Jahr mit FX-Konvertierung.
-
-### PA-03: Währungsunterstützung
-Alle Performance-Endpunkte akzeptieren `?currency=CHF|USD|EUR|GBP|JPY`. FX-Kurse werden aus der `fx_rate`-Tabelle abgerufen.
-
-### PA-04: Benchmark-Overlay
-`/compare/benchmark` liefert normierte Indexdaten (Basis 100), die im Frontend auf den Portfolio-Startwert skaliert werden.
-
-### PA-05: Risiko-Bubbles mit Benchmarks
-`/compare/risk-benchmarks` berechnet Jahresvolatilität und -rendite für SPY, QQQ, AGG, GLD, VNQ über 3 Jahre.
-
-### PA-06: Datumsfilter
-`/history` akzeptiert `from` und `to` als ISO-Datumsstrings zur freien Zeitraumwahl.
-
-### PA-08: Sparplan-Simulation
-`/simulate/sparplan` simuliert monatliche/quartalsweise/jährliche Käufe auf Basis historischer yFinance-Daten. Berechnet CAGR und Max Drawdown.
-
 ## Tests
 
 ```bash

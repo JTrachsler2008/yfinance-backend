@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Portfolio-App — Dokumentation</title>
+<title>Portfolio-App Dokumentation</title>
 <style>
   :root {
     --bg: #ffffff;
@@ -149,7 +149,7 @@
 </p>
 
 <h2 id="überblick">Überblick</h2>
-<p>Man legt ein oder mehrere Portfolios an, erfasst darin Käufe, Verkäufe und Dividenden, und die App berechnet daraus: wie viel das Portfolio heute wert ist, wie gut es sich wirklich entwickelt hat (unabhängig davon, wann Geld ein- oder ausgezahlt wurde), wie riskant es im Vergleich zum Markt ist, und wie sich verschiedene Anlagestrategien historisch geschlagen hätten — inklusive automatischem Rebalancing.</p>
+<p>Man legt ein oder mehrere Portfolios an, erfasst darin Käufe, Verkäufe und Dividenden, und die App berechnet daraus: wie viel das Portfolio heute wert ist, wie gut es sich wirklich entwickelt hat (unabhängig davon, wann Geld ein- oder ausgezahlt wurde), wie riskant es im Vergleich zum Markt ist, und wie sich verschiedene Anlagestrategien historisch geschlagen hätten, inklusive automatischem Rebalancing.</p>
 <p>Ein selbst gebautes, schlankeres Gegenstück zu Tools wie Portfolio Performance oder Parqet, auf die eigenen Bedürfnisse zugeschnitten.</p>
 
 <h2 id="architektur">Architektur</h2>
@@ -164,7 +164,7 @@
   </tbody>
 </table>
 </div>
-<p>Das Frontend hat keinen direkten Kontakt zum Kurs-Dienst — es fragt immer nur das Backend, das bei Bedarf selbst beim Kurs-Dienst nachfragt.</p>
+<p>Das Frontend hat keinen direkten Kontakt zum Kurs-Dienst: es fragt immer nur das Backend, das bei Bedarf selbst beim Kurs-Dienst nachfragt.</p>
 
 <h2 id="stack">Tech-Stack</h2>
 <ul>
@@ -176,19 +176,19 @@
 
 <h2 id="setup">Lokal starten</h2>
 <ol>
-  <li>Kurs-Dienst starten (Python, Port 8000) — ohne ihn laufen keine Kurse.</li>
+  <li>Kurs-Dienst starten (Python, Port 8000). Ohne ihn laufen keine Kurse.</li>
   <li>Backend starten: im Ordner <code>yfinance-backend</code> <code>mvn spring-boot:run</code> ausführen. Läuft auf <code>http://localhost:8080</code>.</li>
-  <li>Frontend starten: im Ordner <code>yfinance-frontend</code> <code>npm run dev</code> ausführen. Läuft auf <code>http://localhost:5173</code> — das öffnet man im Browser.</li>
+  <li>Frontend starten: im Ordner <code>yfinance-frontend</code> <code>npm run dev</code> ausführen. Läuft auf <code>http://localhost:5173</code>, das öffnet man im Browser.</li>
 </ol>
-<p class="note">Zur Datenbank: <code>spring.jpa.hibernate.ddl-auto=create-drop</code> — bei jedem Backend-Neustart wird die Datenbank aus <code>data.sql</code> neu aufgebaut. Alles, was zur Laufzeit angelegt wird (neue Portfolios, Transaktionen), geht bei einem Neustart verloren. Bewusste Entwicklungs-Einstellung, kein Bug.</p>
+<p class="note">Zur Datenbank: <code>spring.jpa.hibernate.ddl-auto=create-drop</code>. Bei jedem Backend-Neustart wird die Datenbank aus <code>data.sql</code> neu aufgebaut. Alles, was zur Laufzeit angelegt wird (neue Portfolios, Transaktionen), geht bei einem Neustart verloren. Bewusste Entwicklungs-Einstellung, kein Bug.</p>
 
 <h2 id="dashboard">Dashboard</h2>
-<p><code>/</code> — Gesamtwert, Gewinn/Verlust und Rendite auf einen Blick. Aufteilung des Portfolios nach Position als Kreisdiagramm, sowie nach Sektor, Land und Handelswährung als klickbare Filter. Dazu aktuelle Finanznachrichten zu den grössten Positionen.</p>
+<p><code>/</code>: Gesamtwert, Gewinn/Verlust und Rendite auf einen Blick. Aufteilung des Portfolios nach Position als Kreisdiagramm, sowie nach Sektor, Land und Handelswährung als klickbare Filter. Dazu aktuelle Finanznachrichten zu den grössten Positionen.</p>
 
 <h2 id="performance">Performance</h2>
-<p><code>/performance</code> — Renditekennzahlen und Wertverlauf.</p>
+<p><code>/performance</code>: Renditekennzahlen und Wertverlauf.</p>
 <ul>
-  <li><strong>TWR</strong> (zeitgewichtete Rendite): reine Anlage-Performance, unabhängig von Ein-/Auszahlungen — vergleichbar mit einem Index.</li>
+  <li><strong>TWR</strong> (zeitgewichtete Rendite): reine Anlage-Performance, unabhängig von Ein-/Auszahlungen, vergleichbar mit einem Index.</li>
   <li><strong>MWR</strong> (geldgewichtete Rendite): berücksichtigt Timing der eigenen Ein-/Auszahlungen.</li>
   <li>Wertverlauf über 12/24/36 Monate oder frei wählbaren Zeitraum, optional mit Benchmark-Overlay (S&amp;P 500, Nasdaq, Gold, …).</li>
   <li>Dividenden pro Jahr, realisierte Gewinne/Verluste (Durchschnittspreis-Methode, siehe <a href="#tranchen">Abschnitt zu den Kauf-Tranchen</a> zur Abweichung von der Tranchen-Methode).</li>
@@ -196,21 +196,21 @@
 </ul>
 
 <h2 id="risiko">Risiko</h2>
-<p><code>/risiko</code> — Kennzahlen für Gesamtportfolio und jede Position: Volatilität, Sharpe Ratio, Beta, maximaler Drawdown, Value-at-Risk. Rendite/Risiko-Diagramm mit jeder Position als Blase, Benchmarks als Vergleichspunkte.</p>
+<p><code>/risiko</code>: Kennzahlen für Gesamtportfolio und jede Position: Volatilität, Sharpe Ratio, Beta, maximaler Drawdown, Value-at-Risk. Rendite/Risiko-Diagramm mit jeder Position als Blase, Benchmarks als Vergleichspunkte.</p>
 
 <h2 id="transaktionen">Transaktionen</h2>
-<p><code>/transaktionen</code> — Käufe, Verkäufe, Dividenden erfassen. Symbol-/Namenssuche mit Aktie/ETF-Kennzeichnung. Optional Broker-Gebühr und Stempelsteuer, die in den Einstandspreis einfliessen.</p>
+<p><code>/transaktionen</code>: Käufe, Verkäufe, Dividenden erfassen. Symbol-/Namenssuche mit Aktie/ETF-Kennzeichnung. Optional Broker-Gebühr und Stempelsteuer, die in den Einstandspreis einfliessen.</p>
 
 <h2 id="tranchen">Einzelne Kauf-Tranchen</h2>
 <p>Jeder Kauf einer Position kann einzeln statt nur als Durchschnitt betrachtet werden. Verkauft man einen Teil, wird immer zuerst die <strong>älteste offene Tranche</strong> aufgelöst, so wie es steuerlich in den meisten Ländern gehandhabt wird.</p>
-<p>Endpunkt: <code>GET /positions/account/{accountId}/security/{securityId}/lots</code> — berechnet rein lesend aus der Transaktionshistorie, ohne eigenes Datenmodell für Tranchen. Liefert pro Tranche zusätzlich einen monatlichen Wertverlauf (<code>verlauf</code>), indexiert auf 100 am Kauftag, damit sich mehrere Tranchen unabhängig von ihrem Kaufdatum optisch vergleichen lassen.</p>
+<p>Endpunkt: <code>GET /positions/account/{accountId}/security/{securityId}/lots</code>. Berechnet rein lesend aus der Transaktionshistorie, ohne eigenes Datenmodell für Tranchen. Liefert pro Tranche zusätzlich einen monatlichen Wertverlauf (<code>verlauf</code>), indexiert auf 100 am Kauftag, damit sich mehrere Tranchen unabhängig von ihrem Kaufdatum optisch vergleichen lassen.</p>
 <p class="note">Bekannte Inkonsistenz: Die „Realisierte Gewinne“-Tabelle (Performance-Seite) rechnet mit dem gleitenden Durchschnittspreis, die Tranchen-Ansicht rechnet nach dem Prinzip „ältester Kauf zuerst verkauft“. Beide können für dieselbe Position unterschiedliche Gewinnzahlen liefern. Noch nicht vereinheitlicht.</p>
 
 <h2 id="szenario">Szenarioanalyse</h2>
-<p><code>/szenario</code> — vier Werkzeuge für Was-wäre-wenn-Rechnungen, ohne echtes Geld zu bewegen:</p>
+<p><code>/szenario</code>: vier Werkzeuge für Was-wäre-wenn-Rechnungen, ohne echtes Geld zu bewegen.</p>
 <ul>
-  <li><strong>Asset-Klassen-Vergleich:</strong> Entwicklung von 100 CHF über 10 Jahre in Aktien, Gold, Anleihen, Immobilien, Bitcoin — plus zwei eigene Portfolio-Zusammensetzungen im direkten Vergleich.</li>
-  <li><strong>Sparplan-Simulation:</strong> regelmässige Einzahlung in mehrere Positionen mit Ziel-Gewichtung über einen historischen Zeitraum. Liefert Endwert, CAGR, Max Drawdown — optional mit Rebalancing (siehe unten).</li>
+  <li><strong>Asset-Klassen-Vergleich:</strong> Entwicklung von 100 CHF über 10 Jahre in Aktien, Gold, Anleihen, Immobilien, Bitcoin, plus zwei eigene Portfolio-Zusammensetzungen im direkten Vergleich.</li>
+  <li><strong>Sparplan-Simulation:</strong> regelmässige Einzahlung in mehrere Positionen mit Ziel-Gewichtung über einen historischen Zeitraum. Liefert Endwert, CAGR, Max Drawdown, optional mit Rebalancing (siehe unten).</li>
   <li><strong>Kaufsimulation:</strong> Auswirkung eines hypothetischen Kaufs heute auf die Portfolio-Gewichtung.</li>
   <li><strong>Historischer Backtest:</strong> Entwicklung einer Position seit einem frei wählbaren Kaufdatum in der Vergangenheit.</li>
 </ul>
@@ -224,13 +224,13 @@ Nach 1 Jahr:      SPY +10 % → 660 CHF
                   QQQ +30 % → 520 CHF
 Gesamtwert:       1'180 CHF
 Ist-Allokation:   SPY 55.9 % · QQQ 44.1 %   ← Drift von 4.1 Punkten</pre>
-<p>Ohne Eingriff wächst diese Abweichung weiter — das Portfolio wird schrittweise riskanter als geplant.</p>
+<p>Ohne Eingriff wächst diese Abweichung weiter. Das Portfolio wird schrittweise riskanter als geplant.</p>
 
 <h3>Was Rebalancing tut</h3>
 <p>Der bestehende Gesamtwert wird neu nach der Ziel-Gewichtung verteilt:</p>
 <pre>Soll SPY = 1'180 × 60 % = 708 CHF   → ist 660 CHF → +48 CHF (fiktiver Zukauf)
 Soll QQQ = 1'180 × 40 % = 472 CHF   → ist 520 CHF → −48 CHF (fiktiver Verkauf)</pre>
-<p class="note">Rebalancing braucht kein zusätzliches Geld — die 48 CHF, die bei SPY dazukommen, sind exakt die 48 CHF, die bei QQQ weggehen. Reine Umschichtung des bestehenden Vermögens, unabhängig von der laufenden Sparplan-Einzahlung. Live nachgewiesen: bei 111'147 CHF Portfoliowert wurden 4'316 CHF umgeschichtet — ein Vielfaches der monatlichen 500-CHF-Einzahlung.</p>
+<p class="note">Rebalancing braucht kein zusätzliches Geld: die 48 CHF, die bei SPY dazukommen, sind exakt die 48 CHF, die bei QQQ weggehen. Reine Umschichtung des bestehenden Vermögens, unabhängig von der laufenden Sparplan-Einzahlung.</p>
 
 <h3>Zwei Auslöse-Modi</h3>
 <div class="table-wrap">
@@ -244,7 +244,7 @@ Soll QQQ = 1'180 × 40 % = 472 CHF   → ist 520 CHF → −48 CHF (fiktiver Ver
 </div>
 
 <h3>Warum die Abweichung am Ende nie exakt 0 % ist</h3>
-<p>Das letzte Rebalancing findet nicht zwangsläufig am letzten Simulationstag statt. Seit diesem Zeitpunkt läuft die Allokation wieder ein Stück auseinander — das ist die Drift <em>seit dem letzten Rebalancing</em>, nicht seit Beginn der Simulation. Ein engeres Intervall bzw. Band hält diesen Rest kleiner.</p>
+<p>Das letzte Rebalancing findet nicht zwangsläufig am letzten Simulationstag statt. Seit diesem Zeitpunkt läuft die Allokation wieder ein Stück auseinander: das ist die Drift <em>seit dem letzten Rebalancing</em>, nicht seit Beginn der Simulation. Ein engeres Intervall bzw. Band hält diesen Rest kleiner.</p>
 
 <p class="note">Bekannte Einschränkung: Die simulierte Umschichtung wird direkt als Neuberechnung der Stückzahl behandelt, nicht als echter Kauf/Verkauf. Dadurch fallen keine simulierten Transaktionskosten und keine Kapitalgewinnsteuer an. Für einen reinen Renditevergleich (mit/ohne Rebalancing) ist das in Ordnung, als Grundlage für die reale Steuerlast nicht.</p>
 
@@ -304,11 +304,11 @@ Soll QQQ = 1'180 × 40 % = 472 CHF   → ist 520 CHF → −48 CHF (fiktiver Ver
 
 <h2 id="datenmodell">Datenmodell (vereinfacht)</h2>
 <ul>
-  <li><strong>Portfolio</strong> — oberste Einheit, hat eine Basiswährung, gehört einem Nutzer.</li>
-  <li><strong>Konto</strong> — gehört zu einem Portfolio, hat einen Bargeldbestand in einer bestimmten Währung.</li>
-  <li><strong>Position</strong> — aktueller Bestand einer Aktie/ETF in einem Konto (Menge + Durchschnitts-Einstandspreis).</li>
-  <li><strong>Transaktion</strong> — einzelner Kauf, Verkauf oder Dividende. Aus der vollständigen Historie werden Positionen, realisierte Gewinne und einzelne Kauf-Tranchen abgeleitet.</li>
-  <li><strong>Security</strong> — Stammdaten einer Aktie/ETF (Symbol, Name, Sektor, Land, Handelswährung).</li>
+  <li><strong>Portfolio</strong>: oberste Einheit, hat eine Basiswährung, gehört einem Nutzer.</li>
+  <li><strong>Konto</strong>: gehört zu einem Portfolio, hat einen Bargeldbestand in einer bestimmten Währung.</li>
+  <li><strong>Position</strong>: aktueller Bestand einer Aktie/ETF in einem Konto (Menge + Durchschnitts-Einstandspreis).</li>
+  <li><strong>Transaktion</strong>: einzelner Kauf, Verkauf oder Dividende. Aus der vollständigen Historie werden Positionen, realisierte Gewinne und einzelne Kauf-Tranchen abgeleitet.</li>
+  <li><strong>Security</strong>: Stammdaten einer Aktie/ETF (Symbol, Name, Sektor, Land, Handelswährung).</li>
 </ul>
 
 <h2 id="logging">Logging</h2>
@@ -338,7 +338,7 @@ target/site/jacoco/index.html         # Abdeckungs-Report nach dem Testlauf</pre
 
 <h2 id="einschraenkungen">Bekannte Einschränkungen</h2>
 <ul>
-  <li>Keine Datenpersistenz über Neustarts hinweg — die Datenbank wird bei jedem Start aus der Vorlage neu aufgebaut.</li>
+  <li>Keine Datenpersistenz über Neustarts hinweg: die Datenbank wird bei jedem Start aus der Vorlage neu aufgebaut.</li>
   <li>Zwei Berechnungsmethoden für Gewinne (Durchschnittspreis vs. Kauf-Tranchen) können für dieselbe Position unterschiedliche Zahlen liefern.</li>
   <li>Rebalancing berücksichtigt keine Transaktionskosten oder Kapitalgewinnsteuer.</li>
   <li>Die Tranchen-Ansicht zeigt nur den offenen Bestand, keine Historie bereits verkaufter Tranchen.</li>
