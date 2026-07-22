@@ -75,7 +75,7 @@ class RiskServiceImplTest {
         RiskServiceImpl service = new RiskServiceImpl(portfolioRepository, positionRepository, fxRateRepository, yFinanceClient);
         when(portfolioRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.getRiskAnalysis(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.getRiskAnalysis(99L, 365, null, null));
     }
 
     @Test
@@ -86,7 +86,7 @@ class RiskServiceImplTest {
         when(yFinanceClient.getHistorical(eq("SPY"), any(), any(), eq("1d")))
                 .thenReturn(buildDailyPrices("SPY", 60, 400));
 
-        RiskAnalysisDto result = service.getRiskAnalysis(1L);
+        RiskAnalysisDto result = service.getRiskAnalysis(1L, 365, null, null);
 
         assertEquals("CHF", result.getCurrency());
         assertTrue(result.getSecurities().isEmpty());
@@ -120,7 +120,7 @@ class RiskServiceImplTest {
         quote.setCurrentPrice(BigDecimal.valueOf(180.0));
         when(yFinanceClient.getQuote("AAPL")).thenReturn(quote);
 
-        RiskAnalysisDto result = service.getRiskAnalysis(1L);
+        RiskAnalysisDto result = service.getRiskAnalysis(1L, 365, null, null);
 
         assertEquals(1, result.getSecurities().size());
         assertEquals("AAPL", result.getSecurities().get(0).getSymbol());
@@ -150,9 +150,8 @@ class RiskServiceImplTest {
                 .thenThrow(new RuntimeException("yFinance nicht erreichbar"));
         when(yFinanceClient.getQuote(anyString())).thenThrow(new RuntimeException("yFinance nicht erreichbar"));
 
-        RiskAnalysisDto result = service.getRiskAnalysis(1L);
+        RiskAnalysisDto result = service.getRiskAnalysis(1L, 365, null, null);
 
-        // Bei fehlenden Kursdaten wird die Position übersprungen (< 10 Datenpunkte), kein Crash
         assertTrue(result.getSecurities().isEmpty());
     }
 }

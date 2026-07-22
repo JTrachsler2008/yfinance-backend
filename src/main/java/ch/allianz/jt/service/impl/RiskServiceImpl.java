@@ -30,7 +30,6 @@ public class RiskServiceImpl implements RiskService {
     private static final double RISK_FREE_RATE = 0.04;
     private static final String BENCHMARK_SYMBOL = "SPY";
     private static final double TRADING_DAYS_PER_YEAR = 252.0;
-    private static final int LOOKBACK_DAYS = 365;
 
     private final PortfolioRepository portfolioRepository;
     private final PositionRepository positionRepository;
@@ -48,16 +47,16 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
-    public RiskAnalysisDto getRiskAnalysis(final Long portfolioId) {
-        log.info("Risikoanalyse berechnen für Portfolio {}", portfolioId);
+    public RiskAnalysisDto getRiskAnalysis(final Long portfolioId, final int lookbackDays, final String from, final String to) {
+        log.info("Risikoanalyse berechnen für Portfolio {} (Zeitraum: {} Tage, von={}, bis={})", portfolioId, lookbackDays, from, to);
 
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
 
         List<Position> positions = positionRepository.findByAccountPortfolioId(portfolioId);
 
-        LocalDate endDate = LocalDate.now().minusDays(1);
-        LocalDate startDate = endDate.minusDays(LOOKBACK_DAYS);
+        LocalDate endDate = (to != null && !to.isBlank()) ? LocalDate.parse(to) : LocalDate.now().minusDays(1);
+        LocalDate startDate = (from != null && !from.isBlank()) ? LocalDate.parse(from) : endDate.minusDays(lookbackDays);
 
         List<Double> benchmarkReturns = getDailyReturns(BENCHMARK_SYMBOL, startDate, endDate);
 

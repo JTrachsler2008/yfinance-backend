@@ -18,5 +18,7 @@ public interface SecurityService {
 
     List<Security> refreshAll();
 
+    Security updateSector(Long id, String sector);
+
     List<java.util.Map<String, String>> search(String query);
 }

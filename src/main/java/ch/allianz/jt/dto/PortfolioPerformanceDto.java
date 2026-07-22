@@ -9,11 +9,11 @@ public class PortfolioPerformanceDto {
     private String portfolioName;
     private String currency;
     private BigDecimal totalMarketValue;
+    private BigDecimal totalCash;
+    private BigDecimal totalPortfolioValue;
     private BigDecimal totalGainLoss;
     private BigDecimal totalGainLossPercent;
-    /** Time-Weighted Return in % — misst reine Marktrendite, unabhängig von Einzahlungszeitpunkt */
     private BigDecimal twr;
-    /** Money-Weighted Return in % — interner Zinsfuss, berücksichtigt Einzahlungszeitpunkte */
     private BigDecimal mwr;
     private BigDecimal totalDividends;
     private BigDecimal totalReturnInclDividends;
@@ -30,6 +30,12 @@ public class PortfolioPerformanceDto {
 
     public BigDecimal getTotalMarketValue() { return totalMarketValue; }
     public void setTotalMarketValue(BigDecimal totalMarketValue) { this.totalMarketValue = totalMarketValue; }
+
+    public BigDecimal getTotalCash() { return totalCash; }
+    public void setTotalCash(BigDecimal totalCash) { this.totalCash = totalCash; }
+
+    public BigDecimal getTotalPortfolioValue() { return totalPortfolioValue; }
+    public void setTotalPortfolioValue(BigDecimal totalPortfolioValue) { this.totalPortfolioValue = totalPortfolioValue; }
 
     public BigDecimal getTotalGainLoss() { return totalGainLoss; }
     public void setTotalGainLoss(BigDecimal totalGainLoss) { this.totalGainLoss = totalGainLoss; }

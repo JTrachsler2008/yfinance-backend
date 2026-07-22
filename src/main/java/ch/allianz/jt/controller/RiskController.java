@@ -14,13 +14,11 @@ public class RiskController {
         this.riskService = riskService;
     }
 
-    /**
-     * Vollständige Risikoanalyse eines Portfolios.
-     * Enthält: Volatilität, Sharpe Ratio, Beta, Max Drawdown, VaR 95%
-     * sowie Daten für das Rendite/Risiko-Streudiagramm (pro Security).
-     */
     @GetMapping("/{id}/risk")
-    public RiskAnalysisDto getRiskAnalysis(@PathVariable Long id) {
-        return riskService.getRiskAnalysis(id);
+    public RiskAnalysisDto getRiskAnalysis(@PathVariable Long id,
+                                            @RequestParam(defaultValue = "365") int lookbackDays,
+                                            @RequestParam(required = false) String from,
+                                            @RequestParam(required = false) String to) {
+        return riskService.getRiskAnalysis(id, lookbackDays, from, to);
     }
 }

@@ -52,6 +52,11 @@ public class SecurityController {
         return securityService.refreshAll();
     }
 
+    @PatchMapping("/{id}/sector")
+    public Security updateSector(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        return securityService.updateSector(id, body.get("sector"));
+    }
+
     @GetMapping("/search")
     public List<Map<String, String>> search(@RequestParam String query) {
         return securityService.search(query);

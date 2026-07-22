@@ -3,6 +3,7 @@ package ch.allianz.jt.service.impl;
 import ch.allianz.jt.client.YFinanceClient;
 import ch.allianz.jt.dto.PortfolioPerformanceDto;
 import ch.allianz.jt.dto.PositionPerformanceDto;
+import ch.allianz.jt.entity.Account;
 import ch.allianz.jt.entity.Portfolio;
 import ch.allianz.jt.entity.Position;
 import ch.allianz.jt.entity.Security;
@@ -11,6 +12,7 @@ import ch.allianz.jt.exception.ResourceNotFoundException;
 import ch.allianz.jt.generated.model.HistoricalPrice;
 import ch.allianz.jt.generated.model.HistoricalResponse;
 import ch.allianz.jt.generated.model.QuoteResponse;
+import ch.allianz.jt.repository.AccountRepository;
 import ch.allianz.jt.repository.FxRateRepository;
 import ch.allianz.jt.repository.PortfolioRepository;
 import ch.allianz.jt.repository.PositionRepository;
@@ -30,6 +32,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 @Service
 public class PerformanceServiceImpl implements PerformanceService {
@@ -41,17 +45,20 @@ public class PerformanceServiceImpl implements PerformanceService {
     private final TransactionRepository transactionRepository;
     private final FxRateRepository fxRateRepository;
     private final YFinanceClient yFinanceClient;
+    private final AccountRepository accountRepository;
 
     public PerformanceServiceImpl(PortfolioRepository portfolioRepository,
                                   PositionRepository positionRepository,
                                   TransactionRepository transactionRepository,
                                   FxRateRepository fxRateRepository,
-                                  YFinanceClient yFinanceClient) {
+                                  YFinanceClient yFinanceClient,
+                                  AccountRepository accountRepository) {
         this.portfolioRepository = portfolioRepository;
         this.positionRepository = positionRepository;
         this.transactionRepository = transactionRepository;
         this.fxRateRepository = fxRateRepository;
         this.yFinanceClient = yFinanceClient;
+        this.accountRepository = accountRepository;
     }
 
     @Override
@@ -66,6 +73,17 @@ public class PerformanceServiceImpl implements PerformanceService {
         List<PositionPerformanceDto> positionDtos = new ArrayList<>();
 
         final String effectiveCurrency = (currency != null && !currency.isBlank()) ? currency : portfolio.getBaseCurrency();
+
+        List<Transaction> allTxns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
+        Map<Long, BigDecimal> dividendsBySecurity = new HashMap<>();
+        for (Transaction t : allTxns) {
+            if (!"DIVIDEND".equalsIgnoreCase(t.getTransactionType())) continue;
+            if (t.getSecurity() == null || t.getPrice() == null || t.getQuantity() == null) continue;
+            BigDecimal divAmount = BigDecimal.valueOf(t.getPrice() * t.getQuantity());
+            String divCurrency = t.getTransactionCurrency() != null ? t.getTransactionCurrency() : t.getSecurity().getTradingCurrency();
+            BigDecimal fxRate = getFxRate(divCurrency, effectiveCurrency);
+            dividendsBySecurity.merge(t.getSecurity().getId(), divAmount.multiply(fxRate), BigDecimal::add);
+        }
 
         for (Position position : positions) {
             String symbol = position.getSecurity().getSymbol();
@@ -93,6 +111,8 @@ public class PerformanceServiceImpl implements PerformanceService {
             }
 
             PositionPerformanceDto dto = new PositionPerformanceDto();
+            dto.setAccountId(position.getAccount().getId());
+            dto.setSecurityId(position.getSecurity().getId());
             dto.setSymbol(symbol);
             dto.setSecurityName(position.getSecurity().getName());
             dto.setQuantity(position.getTotalQuantity());
@@ -101,6 +121,14 @@ public class PerformanceServiceImpl implements PerformanceService {
             dto.setMarketValue(marketValue);
             dto.setGainLoss(gainLoss);
             dto.setGainLossPercent(gainLossPercent);
+
+            BigDecimal dividends = dividendsBySecurity.getOrDefault(position.getSecurity().getId(), BigDecimal.ZERO);
+            BigDecimal dividendYield = BigDecimal.ZERO;
+            if (marketValue.compareTo(BigDecimal.ZERO) > 0) {
+                dividendYield = dividends.divide(marketValue, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100));
+            }
+            dto.setDividendYield(dividendYield.setScale(2, RoundingMode.HALF_UP));
+
             dto.setSector(position.getSecurity().getSector());
             dto.setCountryCode(position.getSecurity().getCountryCode());
             dto.setTradingCurrency(tradingCurrency);
@@ -116,7 +144,6 @@ public class PerformanceServiceImpl implements PerformanceService {
             totalCost = totalCost.add(pos.getMarketValue().subtract(pos.getGainLoss()));
         }
 
-        List<Transaction> allTxns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
         BigDecimal totalDividends = BigDecimal.ZERO;
         for (Transaction t : allTxns) {
             if (!"DIVIDEND".equalsIgnoreCase(t.getTransactionType())) continue;
@@ -137,11 +164,23 @@ public class PerformanceServiceImpl implements PerformanceService {
 
         BigDecimal totalReturnInclDividends = totalGainLoss.add(totalDividends);
 
+        List<Account> accounts = accountRepository.findByPortfolioId(portfolioId);
+        BigDecimal totalCash = BigDecimal.ZERO;
+        for (Account account : accounts) {
+            if (account.getCashAmount() == null) continue;
+            BigDecimal fxRate = getFxRate(account.getCurrency(), effectiveCurrency);
+            totalCash = totalCash.add(BigDecimal.valueOf(account.getCashAmount()).multiply(fxRate));
+        }
+        totalCash = totalCash.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalPortfolioValue = totalMarketValue.add(totalCash);
+
         PortfolioPerformanceDto result = new PortfolioPerformanceDto();
         result.setPortfolioId(portfolioId);
         result.setPortfolioName(portfolio.getName());
         result.setCurrency(effectiveCurrency);
         result.setTotalMarketValue(totalMarketValue);
+        result.setTotalCash(totalCash);
+        result.setTotalPortfolioValue(totalPortfolioValue);
         result.setTotalGainLoss(totalGainLoss);
         result.setTotalGainLossPercent(totalGainLossPercent);
         result.setTotalDividends(totalDividends);
@@ -150,8 +189,8 @@ public class PerformanceServiceImpl implements PerformanceService {
         result.setMwr(calculateMwr(portfolioId, totalMarketValue));
         result.setPositions(positionDtos);
 
-        log.info("Performance berechnet: MarketValue={}, TWR={}%, MWR={}%",
-                totalMarketValue, result.getTwr(), result.getMwr());
+        log.info("Performance berechnet: MarketValue={}, Cash={}, TWR={}%, MWR={}%",
+                totalMarketValue, totalCash, result.getTwr(), result.getMwr());
         return result;
     }
 
@@ -167,7 +206,11 @@ public class PerformanceServiceImpl implements PerformanceService {
                 subPeriodDates.add(txn.getTransactionDate());
             }
         }
-        subPeriodDates.add(LocalDate.now().minusDays(1));
+        LocalDate endOfPeriod = LocalDate.now().minusDays(1);
+        LocalDate lastTxnDate = subPeriodDates.isEmpty() ? null : subPeriodDates.get(subPeriodDates.size() - 1);
+        if (lastTxnDate == null || endOfPeriod.isAfter(lastTxnDate)) {
+            subPeriodDates.add(endOfPeriod);
+        }
 
 
         LocalDate firstDate = subPeriodDates.get(0);
@@ -242,7 +285,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             BigDecimal price = findClosestPrice(historicalPrices.get(sec.getSymbol()), date);
             if (price == null) continue;
 
-            BigDecimal fxRate = getFxRate(sec.getTradingCurrency(), portfolioCurrency);
+            BigDecimal fxRate = getFxRate(sec.getTradingCurrency(), portfolioCurrency, date);
             BigDecimal value = price.multiply(fxRate).multiply(BigDecimal.valueOf(qty));
             total = total.add(value);
         }
@@ -358,7 +401,7 @@ public class PerformanceServiceImpl implements PerformanceService {
     }
 
     @Override
-    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months, String currency, String from, String to) {
+    public List<Map<String, Object>> getPortfolioHistory(Long portfolioId, int months, String currency, String from, String to, String granularity) {
         Portfolio portfolio = portfolioRepository.findById(portfolioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
         if (currency == null || currency.isBlank()) currency = portfolio.getBaseCurrency();
@@ -368,6 +411,7 @@ public class PerformanceServiceImpl implements PerformanceService {
 
         LocalDate fromDate = (from != null && !from.isBlank()) ? LocalDate.parse(from) : LocalDate.now().minusMonths(months);
         LocalDate toDate = (to != null && !to.isBlank()) ? LocalDate.parse(to) : LocalDate.now().minusDays(1);
+        boolean monatlich = !"daily".equalsIgnoreCase(granularity);
 
         Map<String, Map<LocalDate, BigDecimal>> historicalPrices = new HashMap<>();
         Map<Long, Security> securityMap = new HashMap<>();
@@ -380,18 +424,29 @@ public class PerformanceServiceImpl implements PerformanceService {
             }
         }
 
-        List<LocalDate> monthEnds = new ArrayList<>();
-        LocalDate cursor = fromDate.withDayOfMonth(fromDate.lengthOfMonth());
-        while (!cursor.isAfter(toDate)) {
-            monthEnds.add(cursor);
-            cursor = cursor.plusMonths(1).withDayOfMonth(cursor.plusMonths(1).lengthOfMonth());
+        List<LocalDate> points = new ArrayList<>();
+        if (monatlich) {
+            LocalDate cursor = fromDate.withDayOfMonth(fromDate.lengthOfMonth());
+            if (cursor.isAfter(toDate)) cursor = toDate;
+            while (!cursor.isAfter(toDate)) {
+                points.add(cursor);
+                cursor = cursor.plusMonths(1).withDayOfMonth(cursor.plusMonths(1).lengthOfMonth());
+            }
+        } else {
+            LocalDate cursor = fromDate;
+            while (!cursor.isAfter(toDate)) {
+                points.add(cursor);
+                cursor = cursor.plusDays(1);
+            }
         }
+
+        DateTimeFormatter dateFormat = monatlich ? DateTimeFormatter.ofPattern("yyyy-MM") : DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         List<Map<String, Object>> result = new ArrayList<>();
         Map<Long, Double> holdings = new HashMap<>();
 
         int txIdx = 0;
-        for (LocalDate monthEnd : monthEnds) {
+        for (LocalDate monthEnd : points) {
             while (txIdx < txns.size() && !txns.get(txIdx).getTransactionDate().isAfter(monthEnd)) {
                 Transaction t = txns.get(txIdx);
                 if (t.getSecurity() != null) {
@@ -408,7 +463,7 @@ public class PerformanceServiceImpl implements PerformanceService {
             BigDecimal value = calculatePortfolioValue(holdings, securityMap, historicalPrices, currency, monthEnd);
             if (value.compareTo(BigDecimal.ZERO) > 0) {
                 Map<String, Object> point = new LinkedHashMap<>();
-                point.put("date", monthEnd.format(DateTimeFormatter.ofPattern("yyyy-MM")));
+                point.put("date", monthEnd.format(dateFormat));
                 point.put("value", value.setScale(2, RoundingMode.HALF_UP));
                 result.add(point);
             }
@@ -416,13 +471,144 @@ public class PerformanceServiceImpl implements PerformanceService {
         return result;
     }
 
+    @Override
+    public Map<String, Object> getYearlyBreakdown(Long portfolioId, String currency) {
+        Portfolio portfolio = portfolioRepository.findById(portfolioId)
+                .orElseThrow(() -> new ResourceNotFoundException("Portfolio not found: " + portfolioId));
+        final String effectiveCurrency = (currency != null && !currency.isBlank()) ? currency : portfolio.getBaseCurrency();
+
+        List<Transaction> allTxns = transactionRepository.findByPortfolioIdOrderByDate(portfolioId);
+
+        Map<String, List<Transaction>> txnsBySymbol = new LinkedHashMap<>();
+        Map<String, Security> securityBySymbol = new LinkedHashMap<>();
+        for (Transaction t : allTxns) {
+            if (t.getSecurity() == null || t.getTransactionDate() == null) continue;
+            String symbol = t.getSecurity().getSymbol();
+            txnsBySymbol.computeIfAbsent(symbol, k -> new ArrayList<>()).add(t);
+            securityBySymbol.putIfAbsent(symbol, t.getSecurity());
+        }
+
+        LocalDate today = LocalDate.now();
+        TreeSet<Integer> years = new TreeSet<>();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        Map<Integer, BigDecimal> totalPerYear = new TreeMap<>();
+        BigDecimal grandTotal = BigDecimal.ZERO;
+
+        for (Map.Entry<String, List<Transaction>> entry : txnsBySymbol.entrySet()) {
+            String symbol = entry.getKey();
+            Security security = securityBySymbol.get(symbol);
+            List<Transaction> txns = entry.getValue();
+
+            LocalDate firstDate = txns.get(0).getTransactionDate();
+            Map<LocalDate, BigDecimal> prices = fetchHistoricalPriceMap(symbol, firstDate.withDayOfYear(1), today);
+
+            Map<Integer, BigDecimal> yearGains = new TreeMap<>();
+            double quantity = 0.0;
+            int txIdx = 0;
+
+            for (int year = firstDate.getYear(); year <= today.getYear(); year++) {
+                LocalDate yearStart = LocalDate.of(year, 1, 1);
+                LocalDate yearEnd = (year == today.getYear()) ? today : LocalDate.of(year, 12, 31);
+
+                BigDecimal priceStart = findClosestOrEarliestPrice(prices, yearStart);
+                BigDecimal fxStart = getFxRate(security.getTradingCurrency(), effectiveCurrency, yearStart);
+                BigDecimal valueStart = priceStart.multiply(fxStart).multiply(BigDecimal.valueOf(quantity));
+
+                BigDecimal costOfBuys = BigDecimal.ZERO;
+                BigDecimal proceedsOfSells = BigDecimal.ZERO;
+                BigDecimal dividends = BigDecimal.ZERO;
+
+                while (txIdx < txns.size() && txns.get(txIdx).getTransactionDate().getYear() == year) {
+                    Transaction t = txns.get(txIdx);
+                    String type = t.getTransactionType().toUpperCase();
+                    BigDecimal fxRate = getFxRate(security.getTradingCurrency(), effectiveCurrency, t.getTransactionDate());
+
+                    if (type.equals("BUY") || type.equals("ACQUISITION")) {
+                        quantity += t.getQuantity();
+                        if (t.getPrice() != null) {
+                            costOfBuys = costOfBuys.add(BigDecimal.valueOf(t.getPrice() * t.getQuantity()).multiply(fxRate));
+                        }
+                    } else if (type.equals("SELL")) {
+                        quantity = Math.max(0, quantity - t.getQuantity());
+                        if (t.getPrice() != null) {
+                            proceedsOfSells = proceedsOfSells.add(BigDecimal.valueOf(t.getPrice() * t.getQuantity()).multiply(fxRate));
+                        }
+                    } else if (type.equals("SPLIT") && t.getQuantity() != null) {
+                        quantity *= t.getQuantity();
+                    } else if (type.equals("DIVIDEND") && t.getPrice() != null && t.getQuantity() != null) {
+                        String divCur = t.getTransactionCurrency() != null ? t.getTransactionCurrency() : security.getTradingCurrency();
+                        BigDecimal divFx = getFxRate(divCur, effectiveCurrency, t.getTransactionDate());
+                        dividends = dividends.add(BigDecimal.valueOf(t.getPrice() * t.getQuantity()).multiply(divFx));
+                    }
+                    txIdx++;
+                }
+
+                BigDecimal priceEnd = findClosestOrEarliestPrice(prices, yearEnd);
+                BigDecimal fxEnd = getFxRate(security.getTradingCurrency(), effectiveCurrency, yearEnd);
+                BigDecimal valueEnd = priceEnd.multiply(fxEnd).multiply(BigDecimal.valueOf(quantity));
+
+                BigDecimal gain = valueEnd.subtract(valueStart).subtract(costOfBuys).add(proceedsOfSells).add(dividends);
+                yearGains.put(year, gain.setScale(2, RoundingMode.HALF_UP));
+                years.add(year);
+            }
+
+            Map<String, BigDecimal> byYear = new LinkedHashMap<>();
+            BigDecimal rowTotal = BigDecimal.ZERO;
+            for (Map.Entry<Integer, BigDecimal> ye : yearGains.entrySet()) {
+                byYear.put(String.valueOf(ye.getKey()), ye.getValue());
+                rowTotal = rowTotal.add(ye.getValue());
+                totalPerYear.merge(ye.getKey(), ye.getValue(), BigDecimal::add);
+            }
+            rowTotal = rowTotal.setScale(2, RoundingMode.HALF_UP);
+            grandTotal = grandTotal.add(rowTotal);
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("symbol", symbol);
+            row.put("name", security.getName());
+            row.put("byYear", byYear);
+            row.put("total", rowTotal);
+            rows.add(row);
+        }
+
+        List<Integer> sortedYears = new ArrayList<>(years);
+        Map<String, BigDecimal> totalByYear = new LinkedHashMap<>();
+        for (Integer y : sortedYears) {
+            totalByYear.put(String.valueOf(y), totalPerYear.getOrDefault(y, BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP));
+        }
+
+        Map<String, Object> totalRow = new LinkedHashMap<>();
+        totalRow.put("byYear", totalByYear);
+        totalRow.put("total", grandTotal.setScale(2, RoundingMode.HALF_UP));
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("currency", effectiveCurrency);
+        result.put("years", sortedYears);
+        result.put("rows", rows);
+        result.put("totalRow", totalRow);
+        return result;
+    }
+
+    private BigDecimal findClosestOrEarliestPrice(Map<LocalDate, BigDecimal> prices, LocalDate date) {
+        BigDecimal price = findClosestPrice(prices, date);
+        if (price != null) return price;
+        if (prices == null || prices.isEmpty()) return BigDecimal.ZERO;
+        return prices.entrySet().stream()
+                .min(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .orElse(BigDecimal.ZERO);
+    }
+
     private BigDecimal getFxRate(String fromCurrency, String toCurrency) {
+        return getFxRate(fromCurrency, toCurrency, LocalDate.now());
+    }
+
+    private BigDecimal getFxRate(String fromCurrency, String toCurrency, LocalDate date) {
         if (fromCurrency == null || toCurrency == null || fromCurrency.equalsIgnoreCase(toCurrency)) {
             return BigDecimal.ONE;
         }
         return fxRateRepository
                 .findTopByBaseCurrencyAndQuoteCurrencyAndRateDateLessThanEqualOrderByRateDateDesc(
-                        fromCurrency, toCurrency, LocalDate.now())
+                        fromCurrency, toCurrency, date)
                 .map(fx -> fx.getRate())
                 .orElse(BigDecimal.ONE);
     }

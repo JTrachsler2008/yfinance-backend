@@ -125,7 +125,6 @@ public class SparplanController {
                         BigDecimal price = findPrice(priceMap.getOrDefault(sym, Map.of()), cursor);
                         double priorValue = shares.getOrDefault(sym, 0.0) * price.doubleValue();
                         double targetValue = currentValue * entry.getValue();
-                        // Positiv = Zukauf nötig, negativ = Verkauf nötig, um Zielgewicht zu erreichen
                         double delta = targetValue - priorValue;
                         trades.put(sym, round(delta));
                         shares.put(sym, targetValue / price.doubleValue());

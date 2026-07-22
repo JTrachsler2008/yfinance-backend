@@ -46,8 +46,9 @@ public class PerformanceController {
                                              @RequestParam(defaultValue = "36") int months,
                                              @RequestParam(required = false) String currency,
                                              @RequestParam(required = false) String from,
-                                             @RequestParam(required = false) String to) {
-        return performanceService.getPortfolioHistory(id, months, currency, from, to);
+                                             @RequestParam(required = false) String to,
+                                             @RequestParam(defaultValue = "monthly") String granularity) {
+        return performanceService.getPortfolioHistory(id, months, currency, from, to, granularity);
     }
 
     @GetMapping("/{id}/realized-gains")
@@ -145,5 +146,11 @@ public class PerformanceController {
             result.add(row);
         });
         return result;
+    }
+
+    @GetMapping("/{id}/yearly-breakdown")
+    public Map<String, Object> yearlyBreakdown(@PathVariable Long id,
+                                               @RequestParam(required = false) String currency) {
+        return performanceService.getYearlyBreakdown(id, currency);
     }
 }

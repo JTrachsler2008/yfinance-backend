@@ -95,6 +95,15 @@ public class SecurityServiceImpl implements SecurityService {
     }
 
     @Override
+    public Security updateSector(final Long id, final String sector) {
+        Security sec = securityRepository.findById(id)
+                .orElseThrow(() -> new ch.allianz.jt.exception.ResourceNotFoundException("Security not found: " + id));
+        sec.setSector(sector);
+        sec.setUpdatedAt(LocalDateTime.now());
+        return securityRepository.save(sec);
+    }
+
+    @Override
     public List<Map<String, String>> search(String query) {
         List<Map<String, String>> results = new ArrayList<>();
         try {

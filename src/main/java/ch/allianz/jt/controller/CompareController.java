@@ -120,10 +120,6 @@ public class CompareController {
         return list;
     }
 
-    /**
-     * Vergleicht zwei benutzerdefinierte Portfolios.
-     * p1 und p2 sind kommagetrennte Listen von SYMBOL:GEWICHT, z.B. "SPY:60,AGG:40"
-     */
     @GetMapping("/portfolios")
     public Map<String, Object> comparePortfolios(
             @RequestParam String p1,

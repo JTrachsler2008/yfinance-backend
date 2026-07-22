@@ -4,5 +4,5 @@ import ch.allianz.jt.dto.RiskAnalysisDto;
 
 public interface RiskService {
 
-    RiskAnalysisDto getRiskAnalysis(Long portfolioId);
+    RiskAnalysisDto getRiskAnalysis(Long portfolioId, int lookbackDays, String from, String to);
 }

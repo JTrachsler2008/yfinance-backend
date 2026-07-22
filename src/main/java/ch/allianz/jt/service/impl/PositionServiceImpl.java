@@ -56,10 +56,6 @@ public class PositionServiceImpl implements PositionService {
         return positionRepository.findByAccountId(accountId);
     }
 
-    /**
-     * Baut aus der Transaktionshistorie einer Position die offenen Kauf-Tranchen (Lots) nach dem
-     * FIFO-Prinzip auf: Verkäufe verbrauchen zuerst die älteste offene Tranche.
-     */
     @Override
     public List<Map<String, Object>> getLotsFifo(final Long accountId, final Long securityId) {
         log.debug("FIFO-Lots berechnen: Account={}, Security={}", accountId, securityId);
@@ -131,10 +127,6 @@ public class PositionServiceImpl implements PositionService {
         return result;
     }
 
-    /**
-     * Monatlicher Wertverlauf einer Tranche seit ihrem Kaufdatum (indexiert auf 100 am Kauftag),
-     * damit sich mehrere Tranchen in einem Chart optisch vergleichen lassen, egal wann sie gekauft wurden.
-     */
     private List<Map<String, Object>> buildLotHistory(final Lot lot, final Map<LocalDate, BigDecimal> monthlyPrices) {
         List<Map<String, Object>> history = new ArrayList<>();
         if (monthlyPrices.isEmpty()) return history;
@@ -185,7 +177,6 @@ public class PositionServiceImpl implements PositionService {
                 .filter(e -> !e.getKey().isAfter(key))
                 .max(Map.Entry.comparingByKey())
                 .map(Map.Entry::getValue)
-                // Kaufdatum liegt vor der ersten verfügbaren Kurshistorie -> ältesten bekannten Preis als Basis nehmen
                 .orElseGet(() -> ((Map.Entry<LocalDate, BigDecimal>) prices.entrySet().stream()
                         .min(Map.Entry.comparingByKey()).orElseThrow()).getValue());
     }

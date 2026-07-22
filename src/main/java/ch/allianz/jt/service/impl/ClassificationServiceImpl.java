@@ -51,9 +51,11 @@ public class ClassificationServiceImpl implements ClassificationService {
             BigDecimal value = getCurrentValue(pos, baseCurrency);
             total = total.add(value);
 
-            String sector = pos.getSecurity().getSector();
-            if (sector == null || sector.isBlank()) sector = "Unbekannt";
-            sectorMap.merge(sector, value, BigDecimal::add);
+            List<String> sectors = splitSectors(pos.getSecurity().getSector());
+            BigDecimal sectorShare = value.divide(BigDecimal.valueOf(sectors.size()), 6, RoundingMode.HALF_UP);
+            for (String sector : sectors) {
+                sectorMap.merge(sector, sectorShare, BigDecimal::add);
+            }
 
             String country = pos.getSecurity().getCountryCode();
             if (country == null || country.isBlank()) country = "Unbekannt";
@@ -71,6 +73,16 @@ public class ClassificationServiceImpl implements ClassificationService {
         result.setByCountry(toItems(countryMap, total));
         result.setByCurrency(toItems(currencyMap, total));
         return result;
+    }
+
+    private List<String> splitSectors(String raw) {
+        if (raw == null || raw.isBlank()) return List.of("Unbekannt");
+        List<String> sectors = new ArrayList<>();
+        for (String s : raw.split(",")) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) sectors.add(trimmed);
+        }
+        return sectors.isEmpty() ? List.of("Unbekannt") : sectors;
     }
 
     private List<ClassificationItem> toItems(Map<String, BigDecimal> map, BigDecimal total) {

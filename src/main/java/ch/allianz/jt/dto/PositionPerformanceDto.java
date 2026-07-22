@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 
 public class PositionPerformanceDto {
 
+    private Long accountId;
+    private Long securityId;
     private String symbol;
     private String securityName;
     private Double quantity;
@@ -12,9 +14,16 @@ public class PositionPerformanceDto {
     private BigDecimal marketValue;
     private BigDecimal gainLoss;
     private BigDecimal gainLossPercent;
+    private BigDecimal dividendYield;
     private String sector;
     private String countryCode;
     private String tradingCurrency;
+
+    public Long getAccountId() { return accountId; }
+    public void setAccountId(Long accountId) { this.accountId = accountId; }
+
+    public Long getSecurityId() { return securityId; }
+    public void setSecurityId(Long securityId) { this.securityId = securityId; }
 
     public String getSymbol() { return symbol; }
     public void setSymbol(String symbol) { this.symbol = symbol; }
@@ -39,6 +48,9 @@ public class PositionPerformanceDto {
 
     public BigDecimal getGainLossPercent() { return gainLossPercent; }
     public void setGainLossPercent(BigDecimal gainLossPercent) { this.gainLossPercent = gainLossPercent; }
+
+    public BigDecimal getDividendYield() { return dividendYield; }
+    public void setDividendYield(BigDecimal dividendYield) { this.dividendYield = dividendYield; }
 
     public String getSector() { return sector; }
     public void setSector(String sector) { this.sector = sector; }
